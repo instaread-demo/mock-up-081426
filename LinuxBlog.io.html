@@ -1,0 +1,1524 @@
+<!DOCTYPE html><html lang="en-US" class=""><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><base href="https://linuxblog.io/linux-nameservers-dns-resolution/">
+
+<title>Linux nameservers and DNS Resolution | LinuxBlog.io</title>
+<style>
+@font-face {
+  font-family: 'Inter';
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(https://static.linuxblog.io/wp-content/themes/theonepager/fonts/InterVariable-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(https://static.linuxblog.io/wp-content/themes/theonepager/fonts/InterVariable-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  ascent-override: 90.49%;
+  descent-override: 22.56%;
+  line-gap-override: 0%;
+  size-adjust: 107.64%;
+}
+</style>
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<style>html,body,div,span,h1,h2,h3,h4,h5,p,blockquote,pre,a,code,em,img,strong,b,u,i,ul,li,article,aside,footer,header,nav,section,time{margin: 0; padding: 0; border: 0; font-size: 100%; vertical-align: baseline}article,aside,footer,header,nav,section{display: block}blockquote{quotes: none}blockquote:before,blockquote:after{content: ''; content: none}button{cursor: pointer; margin: 0}a:hover,a:active{outline: none}.fix:before,.fix:after,.col-full:before,.col-full:after{content: "\0020"; display: block; height: 0; overflow: hidden}.fix:after,.col-full:after{clear: both}html{font-size: 62.5%; scroll-padding-top: 6.5em}body{font-size: 1.6em; line-height: 1.618; color: #222222; font-family: Inter,'Inter Fallback',Arial,sans-serif; -webkit-text-size-adjust: 100%; text-rendering: optimizeLegibility; -webkit-font-smoothing: auto; font-feature-settings: "calt" 0; font-variant-ligatures: none; font-variation-settings: normal; overflow-x: hidden}img{vertical-align: bottom; max-width: 100%}a{color: #06f; text-decoration: none}a:hover{color: #1E90FF; text-decoration: underline}a img{transition: opacity ease-out 0.1s}a img:hover{opacity: 0.75}h1,h2,h3{color: #222222; margin: 0 0 .618em}h1 a,h3 a{text-decoration: none}h1 a:hover,h3 a:hover{text-decoration: underline}h1{font-size: 1.618em; line-height: 1.387em}h3{font-size: 1.387em}p{-webkit-hyphens: auto; -webkit-hyphenate-character: "\2010"; -webkit-hyphenate-limit-after: 1; -webkit-hyphenate-limit-before: 3; -moz-hyphens: manual; orphans: 3; widows: 3}ul{margin: 0 0 1.618em 0}#wrapper{position: relative}#content{padding: 3.236em 0}#top{background: #000; width: 100%; z-index: 9995; box-sizing: border-box}button.menu-toggle{cursor: pointer; text-align: left; position: relative; border: 0; box-shadow: none; border-radius: 2px; background-image: none; padding: 0.618047em 0.875em 0.618047em 2.61792em; background: transparent; color: rgba(255,255,255,255); margin: 1em 0}button.menu-toggle:hover{background-image: none}button.menu-toggle:before,button.menu-toggle:after,button.menu-toggle span:before{content: ""; display: block; height: 2px; width: 14px; position: absolute; top: 50%; left: 1em; margin-top: -1px; transition: all 0s ease 0s,all 0s ease 0s,all 0.2s ease 0s; border-radius: 3px; background: rgba(255,255,255,0.7)}button.menu-toggle:before{transform: translateY(-4px)}button.menu-toggle:after{transform: translateY(4px)}.primary-navigation{display: none}.main-navigation:after{content: "\0020"; display: block; height: 0; overflow: hidden; clear: both}.main-navigation ul{margin-left: 0; list-style: none; margin-bottom: 0}.main-navigation ul li a{padding: 0.875em 0; display: block}#top ul.nav > li a:hover,#top ul.nav > li a:focus{color: #c0c0c0}.main-navigation ul li a:before{content: '\f0f6'; font-family: Inter,'Inter Fallback',Arial,sans-serif; display: inline-block; font-size: 100%; margin-right: 0.540791em; font-weight: normal; line-height: 1em; width: 1em}body.has-top-nav #header{padding-top: 2em}#header{margin: 0; padding: 5.847em 0 0; clear: both; position: relative; text-align: center; background-color: #fff !important; border-bottom: 1px solid #fff}@media (max-width: 1023px){#sidebar{display: none}} #sidebar{clear: both; overflow: hidden}#footer{padding: 1.1em 0; color: #fff; border-top: 1px solid #dedede; background-color: #000}#footer p{margin: 0}#footer .footer-section{margin-bottom: 2em}#footer .footer-cols{display: flex; justify-content: space-between; align-items: flex-start}#footer .footer-left{text-align: left}#footer .footer-right{text-align: right}#footer .footer-right a{color: #fff}#footer .footer-trademark{font-size: 0.75em; color: #999; margin-top: 0.5em}.svc-banner .svc-hosted{font-size: 0.8em; color: #8b95a5; margin-bottom: 1.1em}.svc-banner .svc-hosted a{color: #fff; text-decoration: underline}.svc-banner .svc-hosted a.sl-uptime{text-decoration: none; color: #8b95a5}.svc-banner .svc-hosted a.sl-uptime:hover{color: #fff}.svc-banner .svc-hosted a.sl-uptime:hover b{color: #6fdc73}.svc-banner .svc-hosted b{color: #4caf50; font-variant-numeric: tabular-nums}#footer .mobile-only{display: none}@media only screen and (max-width: 767px){#footer .mobile-only{display: inline}#footer .footer-cols{flex-direction: column; align-items: center; text-align: center}#footer .footer-left{text-align: center; margin-bottom: 1.5em}#footer .footer-right{text-align: center}} span.heading{display: block; font-size: .857em; text-align: center; text-transform: uppercase; font-weight: normal; font-family: Inter,'Inter Fallback',Arial,sans-serif}.post{margin: 0 0 1.236em 0}.post header{margin: 0 0 0}.post header h1{margin: 0 0 .202em; font-size: 1.618em; font-weight: bold}.post header h1 a:link,.post header h1 a:visited{color: #222222}.post .post-date-author{display: block; margin: 0 0 1.387em; font-style: italic; font-size: .857em}.post .post-date-author strong{font-weight: normal}.post .post-date-author a{color: #222222}.post .entry ul{margin-left: 2.618em}.post .entry blockquote,.type-page .entry blockquote{position: relative; margin: 0 0 1.618em; padding: 0 0 0 2.618em; quotes: "\201C" "\201D" "\2018" "\2019"; font-style: italic}.post .entry blockquote:before,.type-page .entry blockquote:before{content: open-quote; position: absolute; top: 0; left: 0; font-family: Inter,'Inter Fallback',Arial,sans-serif; font-size: 4em; line-height: 1; margin: 0; vertical-align: -0.4em}.post img,.type-page img,.post img.thumbnail,.type-page img.thumbnail{max-width: 100%; height: auto}.post img:hover,.type-page img:hover,.post img.thumbnail:hover,.type-page img.thumbnail:hover{border-color: #c5c5c5}.post img.wp-smiley,.type-page img.wp-smiley{padding: 0; border: 0}.post .alignleft,.type-page .alignleft{float: left; margin: 0 1.618em 2.618em 0}.post .alignright,.type-page .alignright{float: right; margin: 0 0 2.618em 1.618em}.post .aligncenter,.type-page .aligncenter{display: block; text-align: center; margin: 0 auto 1.0em}.post .wp-caption,.type-page .wp-caption{padding: .857em .53em .53em; text-align: center; background: #f5f5f5; border: 1px solid #dedede; max-width: 100%}.post .wp-caption img,.type-page .wp-caption img{margin: 0; background: none; border: 1px solid #dedede}.post .wp-caption-text,.type-page .wp-caption-text{margin: .857em 0 .53em; padding: 0; text-align: center; font-weight: bold}.widget{color: #444444}.widget a{color: #222222}.widget a:hover{color: #005eb8}.widget h3{margin: 0 0 1em; color: #222222; font-size: 1.387em; text-transform: uppercase}.widget ul{clear: both; margin: 0; padding: 0; list-style-position: inside; list-style-type: disc; font-size: 1.1em}.widget ul li{list-style: none; padding: .33em 0}.widget ul li a{text-decoration: none}.widget ul li a:hover{text-decoration: underline}#sidebar .widget{padding: 0.500em 1.618em; font-size: .857em; border-bottom: 1px solid #fff; padding-bottom: 1.5em}#sidebar .widget:nth-child(2n+1){background: #ffffff}#comments{position: relative; padding: 0}.fl{float: left}#post-entries{clear: both}#post-entries .fl,#post-entries .fr{float: none}#post-entries .nav-prev,#post-entries .nav-next{margin: .857em 0}#post-entries .nav-prev a{display: block; color: #222222; text-decoration: none; padding: .857em 1.387em; font-weight: bold; background: #dfefff}#post-entries .nav-next a{display: block; color: #222222; text-decoration: none; padding: .857em 1.387em; font-weight: bold; background: #E8F8F5}#post-entries .nav-prev a:hover{background: #d1e3f5}#post-entries .nav-next a:hover{background: #CCEAE3}pre{font-size: 15px; white-space: pre-wrap; word-wrap: break-word; background: #111; color: #eeeeee; padding: 12px; margin-bottom: 10px; position: relative; border-radius: 3px}pre .copy-btn{position: absolute; top: 10px; right: 6px; background: none; border: none; cursor: pointer; padding: 4px; opacity: 0; transition: opacity .2s}pre:hover .copy-btn{opacity: .6}pre .copy-btn:hover{opacity: 1}pre .copy-btn svg{display: block}pre a{color: #eeeeee; text-decoration: underline}pre code{background: none; padding: 0}#searchform{width: 100%; box-sizing: border-box; position: relative; border-color: #cacaca #dedede #dedede #cacaca; border-width: 1px; border-style: solid; background: #dae8fc; border-radius: 0.236em}#searchform .s,#searchform #s{padding: 1em .857em; min-height: 48px; width: 100%; box-sizing: border-box; margin: 0; border: 0; background: none; color: #222222}#searchform .search-submit,#searchform #searchsubmit{display: none}#searchform label{display: none}h2{font-size: 1.618em; line-height: 1.387em; margin: 0 0 0.202em}h2 + *{padding: 0}@media only screen and (min-width: 1024px){.col-full{max-width: 75.998em; margin: 0 auto; width: 100%}#main{width: 67%}#sidebar{margin-top: 0; width: 31%; clear: none}.col-left{float: left}.col-right{float: right}} @media only screen and (min-width: 1px){ul.nav{position: relative; margin-bottom: 0}ul.nav li{position: relative; display: inline-block; list-style: none}ul.nav li a{display: block; padding: 1.3em 0.500em; font-size: 1.3em; line-height: 1}ul.nav ul{min-width: 11.089em; width: 100%; margin: 0; visibility: hidden; position: absolute; top: 100%; left: 0; z-index: 9999}ul.nav ul li{float: none}ul.nav ul li a{width: 100%; font-size: .9em; display: inline-block; box-sizing: border-box}ul.nav ul ul{left: 100%; top: 0}ul.nav li:hover > ul{visibility: visible}#top{position: fixed; top: 0; left: 0}#top ul.nav{font-size: .857em; text-align: left}#top ul.nav > li a{color: #fff}#top ul.nav > li:hover{background: rgba(0,0,0,0.7)}#top ul.nav > li:hover a{text-decoration: none}#top ul.nav ul{background: rgba(0,0,0,0.85); border-bottom-left-radius: 5px; border-bottom-right-radius: 5px}#top ul.nav ul li{display: block}#top ul.nav ul li a:hover{background: rgba(0,0,0,0.7)}#top ul.nav ul li:first-child a{border-top-left-radius: 5px; border-top-right-radius: 5px}#top ul.nav ul li:last-child a{border-bottom-left-radius: 5px; border-bottom-right-radius: 5px}#top ul.nav ul ul{border-radius: 0 5px 5px 5px}.menu-toggle{display: none}.primary-navigation{display: block}.main-navigation ul li a:before{display: none}.main-navigation ul li:hover > ul{left: 0; display: block}.main-navigation ul li:hover > ul li > ul{left: -9999px}.main-navigation ul li:hover > ul li:hover > ul{left: 100%; top: 0; display: block}.primary-navigation{clear: both; background: rgba(0,0,0,0.06); margin-left: -99em; margin-right: -99em; padding-left: 99em; padding-right: 99em}.primary-navigation:after{content: "\0020"; display: block; height: 0; overflow: hidden; clear: both}#header p{font-size: 3.631em; line-height: 1.25}span.heading{font-size: 1em}.widget h3{text-align: left}.entry img{max-width: 100%}} @media only screen and (min-width: 1600px){.col-full{max-width: 100em}} #linuxblog-contact-form{max-width: 540px}#linuxblog-contact-form p{margin: 0 0 1em}#linuxblog-contact-form input[type="text"],#linuxblog-contact-form input[type="email"],#linuxblog-contact-form textarea{width: 100%; padding: .857em; font-size: 1em; font-family: inherit; color: #222; border: 1px solid #cacaca; border-radius: 0.236em; box-sizing: border-box; background: #fff; transition: border-color 0.2s ease}#linuxblog-contact-form input[type="text"]:focus,#linuxblog-contact-form input[type="email"]:focus,#linuxblog-contact-form textarea:focus{outline: none; border-color: #06f}#linuxblog-contact-form textarea{min-height: 160px; resize: vertical}#linuxblog-contact-form input[type="submit"]{display: inline-block; padding: .857em 1.618em; font-size: 1em; font-family: inherit; font-weight: 600; color: #fff; background: #06f; border: none; border-radius: 0.236em; cursor: pointer; transition: background 0.2s ease}#linuxblog-contact-form input[type="submit"]:hover{background: #1E90FF}.lbcf-recaptcha{margin: 0 0 0.5em}.lbcf-msg{padding: .857em 1em; margin: 0 0 1.618em; border-radius: 0.236em; border: 1px solid}.lbcf-success{background: #f0faf7; border-color: #a3d9c6; color: #1a5632}.lbcf-error{background: #fef2f2; border-color: #f5c6c6; color: #991b1b}.lightbox-overlay{display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; cursor: pointer; justify-content: center; align-items: center}.lightbox-overlay.active{display: flex}.lightbox-overlay img{max-width: 90vw; max-height: 90vh; border-radius: 2px}p{margin: 0 0 .618em}.post .entry li{font-size: 1em}#sidebar .widget{width: 100%}#wpadminbar{display: none !important}.comment-metadata,.comment-list{padding-inline-start: 0}.comment-author img{margin-right: 2px; border-radius: 50%}.comment::marker{content: ''}#reply-title.comment-reply-title a{padding: 10px; background-color: #005EB8; color: #fff; text-decoration: none}#reply-title.comment-reply-title a:hover{background-color: #08c; color: #fff}.site-icon{margin-right: 2px; border-radius: 50%}.widget h3{text-transform: none}code{background: #111; color: #eeeeee; padding: 2px 5px; font-size: 15px; border-radius: 3px}a code,code a{color: #eeeeee; text-decoration: underline}a:hover code,code a:hover,pre a:hover{color: #50fa7b}#top #top-nav{display: block; margin: 8px 0 9px -0.1em}ul.nav li a{display: block; padding: 1em .8em .8em .6em; font-size: 15px}.hjmenulogo{background-image: url(https://static.linuxblog.io/wp-content/uploads/2023/12/linux_blog_logo_01.png) !important; background-repeat: no-repeat !important; background-position: left !important; background-size: contain !important; padding-left: 6px; margin-left: 4px; width: 80px; height: 42px}@media only screen and (max-width: 539px){.hjmenulogo{height: 41px}} .hjmenulogo:hover{opacity: .6; transition: opacity .1s ease-in-out}ul.nav li.current_page_item a{background: none !important}@media only screen and (max-width: 539px){.hide-on-mobile{display: none !important}#top #top-nav{margin-left: -0.2em}} .back-to-top{display: none; position: fixed; bottom: 50px; right: 20px; background-color: #333; color: #fff; padding: 10px 20px; text-align: center; border-radius: 5px; text-decoration: none; transition: background-color .3s; z-index: 1000}.back-to-top:hover{background-color: #555; color: #fff}div#ez-toc-container{background: #dae8fc; border: 0; min-height: 100px; contain: layout}@media (max-width: 768px){div#ez-toc-container{width: 100%; box-sizing: border-box; padding: 0 10px}.ez-toc-container{background: #dae8fc; padding: 15px; border-radius: 8px}.ez-toc-list li{margin-bottom: 5px !important}.ez-toc-link{font-size: 16px !important; line-height: 1.5 !important; padding: 5px 9px !important; display: block !important; border-radius: 2px; transition: background-color .3s}.ez-toc-link:hover{background-color: #c2d1f0 !important}} ul.display-posts-listing{list-style: none; padding: 0; margin: 0}ul.display-posts-listing li.listing-item{margin-bottom: 0; font-size: 1.1em; padding: 10px 15px; border-bottom: 1px solid #ddd; transition: background-color .3s ease-in-out}ul.display-posts-listing li.listing-item a{text-decoration: none; color: #333; font-weight: 700; transition: color .3s ease-in-out}ul.display-posts-listing li.listing-item:hover{background-color: #dae8fc}ul.display-posts-listing li.listing-item a:hover{text-decoration: underline; color: #2962ff; font-weight: 700; transition: font-weight .1s ease-in-out}@media screen and (max-width: 768px){ul.display-posts-listing li.listing-item{font-size: 1.1em; padding: 10px 0.5em}} .display-posts-listing .listing-item{display: flex; align-items: baseline}.display-posts-listing .listing-item .title{flex-grow: 1; margin-left: 0}.display-posts-listing .listing-item .date{flex-shrink: 0; font-size: 13px; color: #333; text-align: right; margin-left: 1em}.dp-tag-filters{display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 1.2em}.dp-tag-btn{display: inline-block; padding: 5px 10px; background: #222; color: #eee; border: none; border-radius: 5px; font-family: inherit; font-size: 15.4px; font-weight: 700; cursor: pointer; transition: background-color 0.3s}.dp-tag-btn:hover{background: #333; color: #eee}.dp-tag-btn.active{background-color: #ddd; color: #222}.dp-tag-btn.active:hover{background-color: #dae8fc; color: #2962ff}.display-posts-listing.filtered .listing-item{background-color: #eee; border-bottom-color: #ccc}.search_main{margin: 20px auto; padding: 10px; background-color: #f8f8f8; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1)}.searchform .field{flex-grow: 1; padding: 10px 15px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px 0 0 5px; background-color: #fff}.searchform .search-submit{padding: 10px 15px; border: none; background-color: #dae8fc; border-radius: 0 5px 5px 0; cursor: pointer}.searchform .field:focus{border: 1px solid #0056b3}.searchform .search-submit:hover{background-color: #0056b3}@media screen and (max-width: 768px){.search_main{width: 92%}.searchform .field,.searchform .search-submit{font-size: 14px}} .tags-list a{background-color: #f8f8f8; color: #333; padding: 5px 10px; margin: 2px; border-radius: 5px; display: inline-block; text-decoration: none; transition: background-color .3s}.tags-list a:hover{color: #2962ff; text-decoration: underline; background-color: #dae8fc}.menu-item-type-post_type.menu-item-object-page.menu-item-17894 a:hover span{color: #12BC12 !important}h2{margin-bottom: 4px}h3{margin-bottom: 4px}h4{font-size: 1.1em; margin-bottom: 5px}h5{font-size: 1em}@media screen and (max-width: 799px){.hayden-after-paragraph,.hayden-after-paragraph-mobile,.hayden-end-of-article,.hayden-end-of-article-mobile{min-height: 395px; position: relative}.hayden-after-paragraph::before,.hayden-after-paragraph-mobile::before,.hayden-end-of-article::before,.hayden-end-of-article-mobile::before{content: ''; display: block; height: 20px}.hayden-after-paragraph::after,.hayden-after-paragraph-mobile::after,.hayden-end-of-article::after,.hayden-end-of-article-mobile::after{content: ''; display: block; height: 20px}.hayden-after-paragraph > div[align="center"],.hayden-after-paragraph-mobile > div[align="center"],.hayden-end-of-article > div[align="center"],.hayden-end-of-article-mobile > div[align="center"]{position: absolute; left: 0; right: 0; bottom: 8px}} @media screen and (min-width: 800px){.hayden-after-paragraph{min-height: 330px}.hayden-end-of-article{min-height: 320px; margin-top: 20px}} .hayden-after-paragraph > div[align="center"],.hayden-end-of-article > div[align="center"]{margin: 0; padding: 0; line-height: 14px}#top,#wrapper{max-width: 100%; margin: 0 auto}#header,#footer,#top,.widget,#content{padding-left: 0.618em !important; padding-right: 0.618em !important; box-sizing: border-box}.col-full{max-width: 1300px; margin: 0 auto}@media only screen and (min-width: 1024px){.col-full{padding-left: 0.938em}} .browse-link{display: inline-block; margin-top: 5px; padding: 4px 4px; background: #E8F8F5; color: #005eb8; font-size: 14px; text-decoration: none; transition: background 0.2s ease}.browse-link:hover{background: #CCEAE3}.discourse-comments-area img.emoji{width: 1.25em; height: 1.25em; max-width: none}.discourse-comments-area li.comment{margin: 0; list-style: none}.comment-content img:not(.emoji){max-width: 100% !important; height: auto !important; width: auto !important; object-fit: contain}.comment-author img,.comment-avatar{width: 45px !important; height: 45px !important; border-radius: 50%; margin-right: 10px}.comment-header{display: flex; align-items: baseline; gap: .5rem; margin-bottom: .3rem}.comment-header time{margin-left: auto; font-size: 1em; color: #919191}.discourse-comments-area hr{display: none}.comment-body{background: none; border: none; border-top: 1px solid #e1e3e5; padding: 1rem 0; margin-bottom: 0; display: flex; gap: 0}.comment-body .comment-meta{flex-shrink: 0}.comment-body .comment-content{flex: 1; min-width: 0}.comment-meta{display: flex !important; flex-direction: column; align-items: flex-start; gap: 0; border-top: none !important; padding: 0; margin-right: 12px; min-width: 45px}.comment-meta .comment-author{display: flex; flex-direction: column; align-items: center}.comment-meta time{display: none}.comment-meta .fn{display: none}.comment-content .discourse-username{font-weight: 700; color: #59626b; font-size: 1.15em}.comment-content .discourse-username a{color: #59626b; text-decoration: none}.comment-content .discourse-username a:hover{color: #005EB8}.comment-content{line-height: 1.65}.comment-content a.mention{display: inline-block; font-size: .93em; font-weight: normal; color: #222; padding: .2em .34em; background: rgb(233,233,233); border-radius: .6em; text-decoration: none; text-wrap: nowrap; line-height: 1}.comment-content a.mention:hover{background: rgb(220,220,220)}.discourse-comments-title{font-size: 1.3em; padding-bottom: .5rem; margin-bottom: 0; border-bottom: none}.discourse-comments-area li.comment:last-of-type .comment-body{border-bottom: 1px solid #e1e3e5}.discourse-comments-area .comment-respond .comment-meta{display: none !important}.discourse-comments-area .onebox .site-icon img,.discourse-comments-area .onebox img.site-icon,.discourse-comments-area .onebox-header img{width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; object-fit: contain}aside.onebox{border: 5px solid #e9e9e9; margin-bottom: 1em; padding: 12px 25px 12px 12px; font-size: 1em}aside.onebox .site-icon{width: 16px; height: 16px; margin-right: 6px; vertical-align: middle}aside.onebox > a[href]{color: #555; text-decoration: none; font-size: 0.85em; vertical-align: middle}article.onebox-body{display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; margin-top: 10px}.aspect-image{grid-row: 1 / 3; max-width: 120px}.aspect-image img,aside.onebox .onebox-body img{width: 100%; height: auto; display: block}aside.onebox .onebox-body .onebox-avatar{max-height: none; max-width: none; height: 60px; width: 60px; grid-row: 1 / 3}aside.onebox .onebox-body h3,aside.onebox .onebox-body h4{font-size: 1em; margin: 0; padding-top: 0}aside.onebox .onebox-body a[href]{color: #04c; text-decoration: none}aside.onebox .onebox-body p{margin: 0}aside.onebox .onebox-metadata,aside.onebox > div[style]{display: none}.comment-body .quote .title{border-left: 5px solid #e9e9e9; background-color: #f9f9f9; color: #646464; padding: 12px 12px 1px 12px}.comment-content > blockquote{border-left: 4px solid #555; background: #f5f5f5; padding: 12px 16px; margin: 0 0 1em}.comment-body .quote blockquote{border-left: 5px solid #e9e9e9; background-color: #f9f9f9; font-size: 1em; padding: 12px; margin: 0; border-top: none; border-right: none; border-bottom: none; clear: both}.comment-body .quote blockquote p:last-child{margin-bottom: 0}.comment-body aside.quote .title .avatar{margin-right: 7px}.comment-body .quote .title a{color: #08c}.comment-body .quote .title a .badge-category{color: #222}.comment-body .comment-meta{display: flex; gap: 1em}.comment-body .comment-author{display: flex; gap: 1em}span.badge-category-bg{width: 9px; height: 9px; display: inline-block; margin-right: 5px; margin-left: 5px}.wpdc-poll-link,.wpdc-onebox-link{display: block}.lightbox-wrapper .meta{display: none}.discourse-comments-area ol{list-style: none; padding: 0}.discourse-comments-area .comment-reply-title{text-align: left}.discourse-comments-area .comment-reply-title .wpdc-discourse-topic-link{margin-left: 0.25em}.discourse-comments-area .comment-respond p:not(.comment-notes){max-width: none}#header p{font: 1.5em/1em Arial,sans-serif; color: #fff}body{background: #fff !important}body #wrapper #header .site-title a{font: bold 9px/1em Arial,sans-serif; color: #fff}#logo img{display: none}.site-title{display: block !important}.site-description{display: none !important}.svc-hero-quote{text-align: center; font-size: 1.15em; color: #555; margin-bottom: 1.618em; padding: 0.5em 0 0}.svc-about p{margin: 0; color: #333; line-height: 1.7}.svc-section{margin-bottom: 1.618em}.svc-section h2,.svc-card h2{margin-top: 0; margin-bottom: 0.5em; font-weight: 700}.svc-section > em,.svc-section > p > em{color: #555}.svc-section ul + p:has(.svc-cta){margin-top: 0}.svc-section ul:has(+ p > .svc-cta){margin-bottom: 0.3em}.svc-card{margin-bottom: 1.618em}.svc-section ul,.svc-card ul{list-style: none; margin-left: 0; padding-left: 0}.svc-section ul li,.svc-card ul li{position: relative; padding-left: 1.6em; margin-bottom: 0.5em; line-height: 1.5}.svc-section ul li::before,.svc-card ul li::before{content: "\2713"; position: absolute; left: 0; color: #06f; font-weight: 700}.svc-cta{display: inline-block; padding: 0.65em 1.8em; background: #06f; color: #fff !important; border-radius: 0.236em; text-decoration: none !important; font-weight: 600; font-size: 0.95em; margin-top: 0.8em; transition: background 0.2s ease}.svc-cta:hover{background: #1E90FF}.svc-cta[style*="transparent"]:hover{background: rgba(255,255,255,0.15) !important}.svc-cta[style*="#444"]:hover{background: #666 !important}.svc-cta[style*="#111"]:hover{background: #333 !important}.svc-grid{display: grid; grid-template-columns: 1fr 1fr; gap: 1.2em; margin-bottom: 1.618em}.svc-grid-item{background: #f8f9fa; border: 1px solid #e9e9e9; border-radius: 6px; padding: 1.4em 1.6em}.svc-grid-item strong{display: block; margin-bottom: 0.3em; color: #000}.svc-extras{margin-bottom: 1.618em}.svc-extras p{margin-bottom: 0.8em}.svc-testimonials{margin-top: 1em}.svc-quote{padding: 0.8em 0 1.2em 0; margin-bottom: 0; border-bottom: 1px solid #e9e9e9}.svc-quote:last-child{border-bottom: none}.svc-quote p{font-style: italic; color: #333; margin: 0 0 0.4em}.svc-quote cite{font-style: normal; font-weight: 600; font-size: 0.9em; color: #555}.svc-quote cite a{color: #06f}.svc-banner{background: radial-gradient(600px 320px at 88% -10%,rgba(59,130,246,0.20),transparent 62%),radial-gradient(520px 320px at 104% 110%,rgba(139,92,246,0.16),transparent 62%),#04060A; color: #EDF1F7; text-align: left; padding: 2.4em 2.6em 1.9em; border-radius: 10px; margin: 1em 0 1.618em}.svc-banner h2{color: #EDF1F7 !important; font-size: 1.75em; font-weight: 800; line-height: 1.18; letter-spacing: -0.015em; padding-bottom: 0.45em; position: relative}.svc-banner h2:after{content: ""; position: absolute; left: 0; bottom: 0; width: 64px; height: 3px; background: #5BA7F7; border-radius: 2px}.svc-banner .svc-accent{color: #5BA7F7; white-space: nowrap}@media only screen and (max-width: 700px){.svc-banner .svc-accent{white-space: normal}} .svc-banner p{color: #93a0b4; margin-bottom: 1.1em; font-size: 0.975em}.svc-banner .svc-logo{display: block; margin: 0 0 1.3em; width: 168px; height: auto}.svc-variant{display: none}.svc-variant.on{display: flex; flex-direction: column; align-items: flex-start}.svc-variant.on .svc-cta{align-self: flex-start}.svc-banner .svc-sub{color: #c9d4e3; font-weight: 600; font-size: 1.08em; margin-bottom: 0.45em}.svc-banner .svc-cta{display: inline-block; margin-top: 0.3em}@media only screen and (max-width: 600px){.svc-banner{padding: 1.7em 1.4em 1.5em}.svc-banner h2{font-size: 1.4em}.svc-variant.on .svc-cta{align-self: stretch; text-align: center}} .svc-banner .svc-cta{font-size: 1.05em; padding: 0.75em 2.2em}.social-links{display: flex; flex-wrap: wrap; gap: 0.4em 0; align-items: center; margin: 0.5em 0 1em}.social-links a{color: #06f; text-decoration: none; font-weight: 600}.social-links a:hover{text-decoration: underline}.social-links .sep{color: #999; margin: 0 0.5em}.about-notice{font-size: 1em; color: #222; text-align: center; margin-top: 2em; margin-bottom: 1em}.about-notice a{color: #222; text-decoration: underline}.photo-row{display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1em; margin-bottom: 1.618em}.photo-row .photo-item{line-height: 0}.photo-row .photo-item a.photo-link{display: block}.photo-row .photo-item br{display: none}.type-page .photo-row .photo-item img{width: 100%; height: 175px; object-fit: cover; border-radius: 4px; display: block; margin: 0; padding: 0}.photo-row .photo-item .photo-caption{font-size: 1.1em; color: #555; margin-top: 0.3em; display: block; line-height: 1.618}.photo-row .photo-item p{margin: 0}.photo-row .photo-item .photo-caption a{color: #06f}.archive-title{font-size: 1.5em; margin: 0 0 0.8em}a.featured-latest-post{display: flex; gap: 1.5em; align-items: flex-start; background: #f5f9ff; padding: 0.8em 15px; margin-bottom: 0; border-bottom: 1px solid #e5e5e5; transition: background-color .2s; text-decoration: none; color: inherit}a.featured-latest-post:hover{background-color: #dae8fc; text-decoration: none}.featured-latest-post .featured-text{flex: 1; min-width: 0}.featured-latest-post .featured-title{margin: 0; font-size: 1.5em; color: #222}a.featured-latest-post:hover .featured-title{color: #2962ff; text-decoration: underline}.featured-latest-post .featured-meta{display: block; font-size: 13px; color: #333; margin: 0.3em 0 0.5em}.featured-latest-post .featured-text p{margin: 0; font-size: 0.95em; color: #333; line-height: 1.6}.featured-latest-post .featured-thumb{flex-shrink: 0; width: 300px; aspect-ratio: 868 / 488; overflow: hidden}.featured-latest-post .featured-thumb img{width: 100%; height: 100%; object-fit: cover; display: block}.post .post-date-author{font-size: 0.95em}#post-entries .nav-prev a,#post-entries .nav-next a{font-size: 1em}#post-entries small{font-size: 0.9em}.browse-link{font-size: 15px}.widget_recent_entries ul li a{font-size: 13.7px}.home .entry h2{font-size: 1.188em}#sidebar .widget h3{font-size: 1.24em}@media only screen and (max-width: 768px){.svc-grid{grid-template-columns: 1fr}.photo-row{grid-template-columns: 1fr}.type-page .photo-row .photo-item img{height: auto}.svc-grid-item{padding: 1em 1.2em}a.featured-latest-post{flex-direction: column; padding: 0.8em; gap: 0}a.featured-latest-post .featured-text{display: contents}a.featured-latest-post .featured-title{order: 1}a.featured-latest-post .featured-meta{order: 2}a.featured-latest-post .featured-thumb{order: 3; width: 100%; margin: 0.5em 0}a.featured-latest-post .featured-text p{order: 4}.display-posts-listing .listing-item{flex-wrap: wrap; max-width: 100%}.display-posts-listing .listing-item .title{width: 100%}.display-posts-listing .listing-item .date{width: 100%; text-align: right; margin-left: 0}} @media (max-width: 860px){.lcio-ext{font-size: 0.7em}}</style>
+
+	<!-- This site is optimized with the Yoast SEO plugin v28.1 - https://yoast.com/product/yoast-seo-wordpress/ -->
+	<meta name="description" content="A practical guide to DNS resolution on Linux: how /etc/resolv.conf, systemd-resolved, and dig work together, and how to troubleshoot common nameserver failures.">
+	<link rel="canonical" href="https://linuxblog.io/linux-nameservers-dns-resolution/">
+	<meta property="og:locale" content="en_US">
+	<meta property="og:type" content="article">
+	<meta property="og:title" content="Linux nameservers and DNS Resolution | LinuxBlog.io">
+	<meta property="og:description" content="A practical guide to DNS resolution on Linux: how /etc/resolv.conf, systemd-resolved, and dig work together, and how to troubleshoot common nameserver failures.">
+	<meta property="og:url" content="https://linuxblog.io/linux-nameservers-dns-resolution/">
+	<meta property="og:site_name" content="LinuxBlog.io">
+	<meta property="article:published_time" content="2026-08-10T10:56:20+00:00">
+	<meta property="article:modified_time" content="2026-08-10T11:28:10+00:00">
+	<meta property="og:image" content="https://static.linuxblog.io/wp-content/uploads/2026/08/dns-resolution-flow.png">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="675">
+	<meta property="og:image:type" content="image/png">
+	<meta name="author" content="Hayden James">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:creator" content="@linuxblog_io">
+	<meta name="twitter:site" content="@linuxblog_io">
+	
+	<!-- / Yoast SEO plugin. -->
+
+
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://linuxblog.io/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flinuxblog.io%2Flinux-nameservers-dns-resolution%2F">
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://linuxblog.io/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flinuxblog.io%2Flinux-nameservers-dns-resolution%2F&amp;format=xml">
+<!-- linuxblog.io is managing ads with Advanced Ads 2.0.25 – https://wpadvancedads.com/ -->
+		<style id="eztoc-style-inline-css">
+#ez-toc-container{background:#F9F9F9;border:1px solid #AAA;border-radius:4px;-webkit-box-shadow:0 1px 1px rgb(0 0 0 / .05);box-shadow:0 1px 1px rgb(0 0 0 / .05);display:table;margin-bottom:1em;padding-top:10px;padding-right:20px;padding-bottom:10px;padding-left:10px;position:relative;width:auto}div.ez-toc-widget-container{padding:0;position:relative}#ez-toc-container.ez-toc-light-blue{background:#EDF6FF}#ez-toc-container.ez-toc-white{background:#FFF}#ez-toc-container.ez-toc-black{background:#000}#ez-toc-container.ez-toc-transparent{background:none #fff0}div.ez-toc-widget-container ul{display:block}div.ez-toc-widget-container li{border:none;padding:0}div.ez-toc-widget-container ul.ez-toc-list{padding:10px}#ez-toc-container ul ul,.ez-toc div.ez-toc-widget-container ul ul{margin-left:1.5em}#ez-toc-container ul,#ez-toc-container li{margin:0;padding:0}#ez-toc-container ul,#ez-toc-container li,#ez-toc-container ul li,div.ez-toc-widget-container,div.ez-toc-widget-container li{background:none;list-style:none none;line-height:1.6;margin:0;overflow:hidden;z-index:1}#ez-toc-container .ez-toc-title{text-align:left;line-height:1.45;margin:0;padding:0}.ez-toc-title-container{display:table;width:100%}.ez-toc-title,.ez-toc-title-toggle{display:inline;text-align:left;vertical-align:middle}#ez-toc-container.ez-toc-black p.ez-toc-title{color:#FFF}#ez-toc-container div.ez-toc-title-container+ul.ez-toc-list{margin-top:1em}.ez-toc-wrap-left{margin:0 auto 1em 0px!important}.ez-toc-wrap-left-text{float:left}.ez-toc-wrap-right{margin:0 0 1em auto!important}.ez-toc-wrap-right-text{float:right}#ez-toc-container a{color:#444;box-shadow:none;text-decoration:none;text-shadow:none;display:inline-flex;align-items:stretch;flex-wrap:nowrap}#ez-toc-container a:visited{color:#9f9f9f}#ez-toc-container a:hover{text-decoration:underline}#ez-toc-container.ez-toc-black a{color:#FFF}#ez-toc-container.ez-toc-black a:visited{color:#FFF}#ez-toc-container a.ez-toc-toggle{display:flex;align-items:center;color:#444}.ez-toc-widget-container ul.ez-toc-list li::before{content:' ';position:absolute;left:0;right:0;height:30px;line-height:30px;z-index:-1}.ez-toc-widget-container ul.ez-toc-list li.active{background-color:#EDEDED}.ez-toc-widget-container li.active>a{font-weight:900}.ez-toc-btn{display:inline-block;padding:6px 12px;margin-bottom:0;font-size:14px;font-weight:400;line-height:1.428571429;text-align:center;white-space:nowrap;vertical-align:middle;cursor:pointer;background-image:none;border:1px solid #fff0;border-radius:4px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;-o-user-select:none;user-select:none}.ez-toc-btn:focus{outline:thin dotted #333;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.ez-toc-btn:hover,.ez-toc-btn:focus{color:#333;text-decoration:none}.ez-toc-btn:active,.ez-toc-btn.active{background-image:none;outline:0;-webkit-box-shadow:inset 0 3px 5px rgb(0 0 0 / .125);box-shadow:inset 0 3px 5px rgb(0 0 0 / .125)}.ez-toc-btn-default{color:#333;background-color:#fff;border-color:#ccc}.ez-toc-btn-default:hover,.ez-toc-btn-default:focus,.ez-toc-btn-default:active,.ez-toc-btn-default.active{color:#333;background-color:#ebebeb;border-color:#adadad}.ez-toc-btn-default:active,.ez-toc-btn-default.active{background-image:none}.ez-toc-btn-sm,.ez-toc-btn-xs{padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.ez-toc-btn-xs{padding:1px 5px}.ez-toc-btn-default{text-shadow:0 -1px 0 rgb(0 0 0 / .2);-webkit-box-shadow:inset 0 1px 0 rgb(255 255 255 / .15),0 1px 1px rgb(0 0 0 / .075);box-shadow:inset 0 1px 0 rgb(255 255 255 / .15),0 1px 1px rgb(0 0 0 / .075)}.ez-toc-btn-default:active{-webkit-box-shadow:inset 0 3px 5px rgb(0 0 0 / .125);box-shadow:inset 0 3px 5px rgb(0 0 0 / .125)}.ez-toc-btn:active,.btn.active{background-image:none}.ez-toc-btn-default{text-shadow:0 1px 0 #fff;background-image:-webkit-gradient(linear,left 0,left 100%,from(#fff),to(#e0e0e0));background-image:-webkit-linear-gradient(top,#fff 0,#e0e0e0 100%);background-image:-moz-linear-gradient(top,#fff 0,#e0e0e0 100%);background-image:linear-gradient(to bottom,#fff 0,#e0e0e0 100%);background-repeat:repeat-x;border-color:#dbdbdb;border-color:#ccc;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff',endColorstr='#ffe0e0e0',GradientType=0);filter:progid:DXImageTransform.Microsoft.gradient(enabled=false)}.ez-toc-btn-default:hover,.ez-toc-btn-default:focus{background-color:#e0e0e0;background-position:0 -15px}.ez-toc-btn-default:active,.ez-toc-btn-default.active{background-color:#e0e0e0;border-color:#dbdbdb}.ez-toc-pull-right{float:right!important;margin-left:10px}#ez-toc-container label.cssicon,#ez-toc-widget-container label.cssicon{height:30px}.ez-toc-glyphicon{position:relative;top:1px;display:inline-block;font-family:'Glyphicons Halflings';-webkit-font-smoothing:antialiased;font-style:normal;font-weight:400;line-height:1;-moz-osx-font-smoothing:grayscale}.ez-toc-glyphicon:empty{width:1em}.ez-toc-toggle i.ez-toc-glyphicon{font-size:16px;margin-left:2px}#ez-toc-container input{position:absolute;left:-999em}#ez-toc-container input[type="checkbox"]:checked+nav,#ez-toc-widget-container input[type="checkbox"]:checked+nav{opacity:0;max-height:0;border:none;display:none}#ez-toc-container label{position:relative;cursor:pointer;display:initial}#ez-toc-container .ez-toc-js-icon-con{position:relative;cursor:pointer;display:initial}#ez-toc-container .ez-toc-toggle label{float:right;position:relative;font-size:16px;padding:0;border:1px solid #999191;border-radius:5px;cursor:pointer;left:10px;width:35px}#ez-toc-container .ez-toc-js-icon-con{float:right;position:relative;font-size:16px;padding:0;border:1px solid #999191;border-radius:5px;cursor:pointer;left:10px;width:35px}div#ez-toc-container .ez-toc-title{display:initial}.ez-toc-wrap-center{margin:0 auto 1em auto!important}#ez-toc-container a.ez-toc-toggle{color:#444;background:inherit;border:inherit}.ez-toc-toggle #item{position:absolute;left:-999em}label.cssicon .ez-toc-glyphicon:empty{font-size:16px;margin-left:2px}label.cssiconcheckbox{display:none}.ez-toc-widget-container ul li a{padding-left:10px;display:inline-flex;align-items:stretch;flex-wrap:nowrap}.ez-toc-widget-container ul.ez-toc-list li{height:auto!important}.ez-toc-cssicon{float:right;position:relative;font-size:16px;padding:0;border:1px solid #999191;border-radius:5px;cursor:pointer;left:10px;width:35px}.ez-toc-icon-toggle-span{display:flex;align-items:center;width:35px;height:30px;justify-content:center;direction:ltr}#ez-toc-container .eztoc-toggle-hide-by-default{display:none}.eztoc_no_heading_found{background-color:#ff0;padding-left:10px}.eztoc-hide{display:none}.term-description .ez-toc-title-container p:nth-child(2){width:50px;float:right;margin:0}.ez-toc-list.ez-toc-columns-2{column-count:2;column-gap:20px;column-fill:balance}.ez-toc-list.ez-toc-columns-2>li{display:block;break-inside:avoid;margin-bottom:8px;page-break-inside:avoid}.ez-toc-list.ez-toc-columns-3{column-count:3;column-gap:20px;column-fill:balance}.ez-toc-list.ez-toc-columns-3>li{display:block;break-inside:avoid;margin-bottom:8px;page-break-inside:avoid}.ez-toc-list.ez-toc-columns-4{column-count:4;column-gap:20px;column-fill:balance}.ez-toc-list.ez-toc-columns-4>li{display:block;break-inside:avoid;margin-bottom:8px;page-break-inside:avoid}.ez-toc-list.ez-toc-columns-optimized{column-fill:balance;orphans:2;widows:2}.ez-toc-list.ez-toc-columns-optimized>li{display:block;break-inside:avoid;page-break-inside:avoid}@media (max-width:768px){.ez-toc-list.ez-toc-columns-2,.ez-toc-list.ez-toc-columns-3,.ez-toc-list.ez-toc-columns-4{column-count:1;column-gap:0}}@media (max-width:1024px) and (min-width:769px){.ez-toc-list.ez-toc-columns-4{column-count:2}.ez-toc-list.ez-toc-columns-3{column-count:2}}.fusion-footer #ez-toc-container{display:none}.ez-toc-container-direction {direction: ltr;}.ez-toc-counter ul {direction: ltr;counter-reset: item ;}.ez-toc-counter nav ul li a::before {content: counter(item, disc) '  ';margin-right: .2em; counter-increment: item;flex-grow: 0;flex-shrink: 0;float: left; }.ez-toc-widget-direction {direction: ltr;}.ez-toc-widget-container ul {direction: ltr;counter-reset: item ;}.ez-toc-widget-container nav ul li a::before {content: counter(item, disc) '  ';margin-right: .2em; counter-increment: item;flex-grow: 0;flex-shrink: 0;float: left; }div#ez-toc-container .ez-toc-title {font-size: 150%;}div#ez-toc-container .ez-toc-title {font-weight: 700;}div#ez-toc-container ul li , div#ez-toc-container ul li a {font-size: 100%;}div#ez-toc-container ul li , div#ez-toc-container ul li a {font-weight: 500;}div#ez-toc-container nav ul ul li {font-size: 100%;}div#ez-toc-container {background: #dae8fc;border: 1px solid #ffffff;width: 96.5%;}div#ez-toc-container p.ez-toc-title , #ez-toc-container .ez_toc_custom_title_icon , #ez-toc-container .ez_toc_custom_toc_icon {color: #000000;}div#ez-toc-container ul.ez-toc-list a {color: #000000;}div#ez-toc-container ul.ez-toc-list a:hover {color: #6394bf;}div#ez-toc-container ul.ez-toc-list a:visited {color: #000000;}.ez-toc-counter nav ul li a::before {color: ;}.ez-toc-counter nav ul li a::before {color: #000000;}.ez-toc-box-title {font-weight: bold; margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 1px; color: #666; padding-bottom: 5px;position:absolute;top:-4%;left:5%;background-color: inherit;transition: top 0.3s ease;}.ez-toc-box-title.toc-closed {top:-25%;}ul.ez-toc-list a.ez-toc-link { padding: 2px 0 2px 0; }
+/*# sourceURL=eztoc-style-inline-css */
+</style>
+
+
+
+
+
+<link rel="https://api.w.org/" href="https://linuxblog.io/wp-json/"><link rel="alternate" title="JSON" type="application/json" href="https://linuxblog.io/wp-json/wp/v2/posts/22298">
+<!--  Mobile viewport scale | Disable user zooming as the layout is optimised -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" sizes="512x512" href="https://linuxblog.io/wp-content/uploads/2023/12/cropped-512-site-logo.png">
+		
+		<style>.hayden-parallax-container { position: relative; display: block; overflow: hidden; clear: both; margin: 0; padding: 0; z-index: 1; }
+        .hayden-parallax-clip { position: absolute; top: 0; right: 0; bottom: 0; left: 0; clip-path: inset(0); -webkit-clip-path: inset(0); }
+        .hayden-parallax-inner { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; display: flex; justify-content: center; align-items: center; will-change: transform; visibility: hidden; z-index: -1; pointer-events: none; }
+        .hayden-parallax-content-block { width: 100%; height: auto; pointer-events: auto; }
+        .hayden-parallax-content-block img { display: block; margin: 0 auto; max-width: 100%; height: auto; object-fit: contain; }
+        .hayden-parallax-content-block .unslider { overflow: visible !important; }
+        .hayden-parallax-content-block .unslider-wrap { display: flex !important; }</style><link rel="icon" href="https://linuxblog.io/wp-content/uploads/2023/12/cropped-512-site-logo-32x32.png" sizes="32x32">
+<link rel="icon" href="https://linuxblog.io/wp-content/uploads/2023/12/cropped-512-site-logo-192x192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="https://linuxblog.io/wp-content/uploads/2023/12/cropped-512-site-logo-180x180.png">
+<meta name="msapplication-TileImage" content="https://linuxblog.io/wp-content/uploads/2023/12/cropped-512-site-logo-270x270.png">
+
+<!-- Woo Custom Typography -->
+<meta name="theme-color" content="#000000">
+
+<style data-ir-css="1">@font-face { font-family: Inter; font-weight: 100 900; font-display: swap; src: url("https://static.linuxblog.io/wp-content/themes/theonepager/fonts/InterVariable-latin-ext.woff2") format("woff2"); unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: Inter; font-weight: 100 900; font-display: swap; src: url("https://static.linuxblog.io/wp-content/themes/theonepager/fonts/InterVariable-latin.woff2") format("woff2"); unicode-range: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter Fallback"; src: local("Arial"); ascent-override: 90.49%; descent-override: 22.56%; line-gap-override: 0%; size-adjust: 107.64%; }
+html, body, div, span, h1, h2, h3, h4, h5, p, blockquote, pre, a, code, em, img, strong, b, u, i, ul, li, article, aside, footer, header, nav, section, time { margin: 0px; padding: 0px; border: 0px; font-size: 100%; vertical-align: baseline; }
+article, aside, footer, header, nav, section { display: block; }
+blockquote { quotes: none; }
+blockquote::before, blockquote::after { content: none; }
+button { cursor: pointer; margin: 0px; }
+a:hover, a:active { outline: none; }
+.fix::before, .fix::after, .col-full::before, .col-full::after { content: " "; display: block; height: 0px; overflow: hidden; }
+.fix::after, .col-full::after { clear: both; }
+html { font-size: 62.5%; scroll-padding-top: 6.5em; }
+body { font-size: 1.6em; line-height: 1.618; color: rgb(34, 34, 34); font-family: Inter, "Inter Fallback", Arial, sans-serif; text-size-adjust: 100%; text-rendering: optimizelegibility; -webkit-font-smoothing: auto; font-feature-settings: "calt" 0; font-variant-ligatures: none; font-variation-settings: normal; overflow-x: hidden; }
+img { vertical-align: bottom; max-width: 100%; }
+a { color: rgb(0, 102, 255); text-decoration: none; }
+a:hover { color: rgb(30, 144, 255); text-decoration: underline; }
+a img { transition: opacity 0.1s ease-out; }
+a img:hover { opacity: 0.75; }
+h1, h2, h3 { color: rgb(34, 34, 34); margin: 0px 0px 0.618em; }
+h1 a, h3 a { text-decoration: none; }
+h1 a:hover, h3 a:hover { text-decoration: underline; }
+h1 { font-size: 1.618em; line-height: 1.387em; }
+h3 { font-size: 1.387em; }
+p { hyphenate-character: "‐"; orphans: 3; widows: 3; }
+ul { margin: 0px 0px 1.618em; }
+#wrapper { position: relative; }
+#content { padding: 3.236em 0px; }
+#top { background: rgb(0, 0, 0); width: 100%; z-index: 9995; box-sizing: border-box; }
+button.menu-toggle { cursor: pointer; text-align: left; position: relative; border: 0px; box-shadow: none; border-radius: 2px; padding: 0.618047em 0.875em 0.618047em 2.61792em; background: transparent; color: rgb(255, 255, 255); margin: 1em 0px; }
+button.menu-toggle:hover { background-image: none; }
+button.menu-toggle::before, button.menu-toggle::after, button.menu-toggle span::before { content: ""; display: block; height: 2px; width: 14px; position: absolute; top: 50%; left: 1em; margin-top: -1px; transition: all, all, 0.2s; border-radius: 3px; background: rgba(255, 255, 255, 0.7); }
+button.menu-toggle::before { transform: translateY(-4px); }
+button.menu-toggle::after { transform: translateY(4px); }
+.primary-navigation { display: none; }
+.main-navigation::after { content: " "; display: block; height: 0px; overflow: hidden; clear: both; }
+.main-navigation ul { margin-left: 0px; list-style: none; margin-bottom: 0px; }
+.main-navigation ul li a { padding: 0.875em 0px; display: block; }
+#top ul.nav > li a:hover, #top ul.nav > li a:focus { color: rgb(192, 192, 192); }
+.main-navigation ul li a::before { content: ""; font-family: Inter, "Inter Fallback", Arial, sans-serif; display: inline-block; font-size: 100%; margin-right: 0.540791em; font-weight: normal; line-height: 1em; width: 1em; }
+body.has-top-nav #header { padding-top: 2em; }
+#header { margin: 0px; padding: 5.847em 0px 0px; clear: both; position: relative; text-align: center; border-bottom: 1px solid rgb(255, 255, 255); background-color: rgb(255, 255, 255) !important; }
+@media (max-width: 1023px) {
+  #sidebar { display: none; }
+}
+#sidebar { clear: both; overflow: hidden; }
+#footer { padding: 1.1em 0px; color: rgb(255, 255, 255); border-top: 1px solid rgb(222, 222, 222); background-color: rgb(0, 0, 0); }
+#footer p { margin: 0px; }
+#footer .footer-section { margin-bottom: 2em; }
+#footer .footer-cols { display: flex; justify-content: space-between; align-items: flex-start; }
+#footer .footer-left { text-align: left; }
+#footer .footer-right { text-align: right; }
+#footer .footer-right a { color: rgb(255, 255, 255); }
+#footer .footer-trademark { font-size: 0.75em; color: rgb(153, 153, 153); margin-top: 0.5em; }
+.svc-banner .svc-hosted { font-size: 0.8em; color: rgb(139, 149, 165); margin-bottom: 1.1em; }
+.svc-banner .svc-hosted a { color: rgb(255, 255, 255); text-decoration: underline; }
+.svc-banner .svc-hosted a.sl-uptime { text-decoration: none; color: rgb(139, 149, 165); }
+.svc-banner .svc-hosted a.sl-uptime:hover { color: rgb(255, 255, 255); }
+.svc-banner .svc-hosted a.sl-uptime:hover b { color: rgb(111, 220, 115); }
+.svc-banner .svc-hosted b { color: rgb(76, 175, 80); font-variant-numeric: tabular-nums; }
+#footer .mobile-only { display: none; }
+@media only screen and (max-width: 767px) {
+  #footer .mobile-only { display: inline; }
+  #footer .footer-cols { flex-direction: column; align-items: center; text-align: center; }
+  #footer .footer-left { text-align: center; margin-bottom: 1.5em; }
+  #footer .footer-right { text-align: center; }
+}
+span.heading { display: block; font-size: 0.857em; text-align: center; text-transform: uppercase; font-weight: normal; font-family: Inter, "Inter Fallback", Arial, sans-serif; }
+.post { margin: 0px 0px 1.236em; }
+.post header { margin: 0px; }
+.post header h1 { margin: 0px 0px 0.202em; font-size: 1.618em; font-weight: bold; }
+.post header h1 a:link, .post header h1 a:visited { color: rgb(34, 34, 34); }
+.post .post-date-author { display: block; margin: 0px 0px 1.387em; font-style: italic; font-size: 0.857em; }
+.post .post-date-author strong { font-weight: normal; }
+.post .post-date-author a { color: rgb(34, 34, 34); }
+.post .entry ul { margin-left: 2.618em; }
+.post .entry blockquote, .type-page .entry blockquote { position: relative; margin: 0px 0px 1.618em; padding: 0px 0px 0px 2.618em; quotes: "“" "”" "‘" "’"; font-style: italic; }
+.post .entry blockquote::before, .type-page .entry blockquote::before { content: open-quote; position: absolute; top: 0px; left: 0px; font-family: Inter, "Inter Fallback", Arial, sans-serif; font-size: 4em; line-height: 1; margin: 0px; vertical-align: -0.4em; }
+.post img, .type-page img, .post img.thumbnail, .type-page img.thumbnail { max-width: 100%; height: auto; }
+.post img:hover, .type-page img:hover, .post img.thumbnail:hover, .type-page img.thumbnail:hover { border-color: rgb(197, 197, 197); }
+.post img.wp-smiley, .type-page img.wp-smiley { padding: 0px; border: 0px; }
+.post .alignleft, .type-page .alignleft { float: left; margin: 0px 1.618em 2.618em 0px; }
+.post .alignright, .type-page .alignright { float: right; margin: 0px 0px 2.618em 1.618em; }
+.post .aligncenter, .type-page .aligncenter { display: block; text-align: center; margin: 0px auto 1em; }
+.post .wp-caption, .type-page .wp-caption { padding: 0.857em 0.53em 0.53em; text-align: center; background: rgb(245, 245, 245); border: 1px solid rgb(222, 222, 222); max-width: 100%; }
+.post .wp-caption img, .type-page .wp-caption img { margin: 0px; background: none; border: 1px solid rgb(222, 222, 222); }
+.post .wp-caption-text, .type-page .wp-caption-text { margin: 0.857em 0px 0.53em; padding: 0px; text-align: center; font-weight: bold; }
+.widget { color: rgb(68, 68, 68); }
+.widget a { color: rgb(34, 34, 34); }
+.widget a:hover { color: rgb(0, 94, 184); }
+.widget h3 { margin: 0px 0px 1em; color: rgb(34, 34, 34); font-size: 1.387em; text-transform: uppercase; }
+.widget ul { clear: both; margin: 0px; padding: 0px; list-style-position: inside; list-style-type: disc; font-size: 1.1em; }
+.widget ul li { list-style: none; padding: 0.33em 0px; }
+.widget ul li a { text-decoration: none; }
+.widget ul li a:hover { text-decoration: underline; }
+#sidebar .widget { padding: 0.5em 1.618em 1.5em; font-size: 0.857em; border-bottom: 1px solid rgb(255, 255, 255); }
+#sidebar .widget:nth-child(2n+1) { background: rgb(255, 255, 255); }
+#comments { position: relative; padding: 0px; }
+.fl { float: left; }
+#post-entries { clear: both; }
+#post-entries .fl, #post-entries .fr { float: none; }
+#post-entries .nav-prev, #post-entries .nav-next { margin: 0.857em 0px; }
+#post-entries .nav-prev a { display: block; color: rgb(34, 34, 34); text-decoration: none; padding: 0.857em 1.387em; font-weight: bold; background: rgb(223, 239, 255); }
+#post-entries .nav-next a { display: block; color: rgb(34, 34, 34); text-decoration: none; padding: 0.857em 1.387em; font-weight: bold; background: rgb(232, 248, 245); }
+#post-entries .nav-prev a:hover { background: rgb(209, 227, 245); }
+#post-entries .nav-next a:hover { background: rgb(204, 234, 227); }
+pre { font-size: 15px; white-space: pre-wrap; overflow-wrap: break-word; background: rgb(17, 17, 17); color: rgb(238, 238, 238); padding: 12px; margin-bottom: 10px; position: relative; border-radius: 3px; }
+pre .copy-btn { position: absolute; top: 10px; right: 6px; background: none; border: none; cursor: pointer; padding: 4px; opacity: 0; transition: opacity 0.2s; }
+pre:hover .copy-btn { opacity: 0.6; }
+pre .copy-btn:hover { opacity: 1; }
+pre .copy-btn svg { display: block; }
+pre a { color: rgb(238, 238, 238); text-decoration: underline; }
+pre code { background: none; padding: 0px; }
+#searchform { width: 100%; box-sizing: border-box; position: relative; border-color: rgb(202, 202, 202) rgb(222, 222, 222) rgb(222, 222, 222) rgb(202, 202, 202); border-width: 1px; border-style: solid; background: rgb(218, 232, 252); border-radius: 0.236em; }
+#searchform .s, #searchform #s { padding: 1em 0.857em; min-height: 48px; width: 100%; box-sizing: border-box; margin: 0px; border: 0px; background: none; color: rgb(34, 34, 34); }
+#searchform .search-submit, #searchform #searchsubmit { display: none; }
+#searchform label { display: none; }
+h2 { font-size: 1.618em; line-height: 1.387em; margin: 0px 0px 0.202em; }
+h2 + * { padding: 0px; }
+@media only screen and (min-width: 1024px) {
+  .col-full { max-width: 75.998em; margin: 0px auto; width: 100%; }
+  #main { width: 67%; }
+  #sidebar { margin-top: 0px; width: 31%; clear: none; }
+  .col-left { float: left; }
+  .col-right { float: right; }
+}
+@media only screen and (min-width: 1px) {
+  ul.nav { position: relative; margin-bottom: 0px; }
+  ul.nav li { position: relative; display: inline-block; list-style: none; }
+  ul.nav li a { display: block; padding: 1.3em 0.5em; font-size: 1.3em; line-height: 1; }
+  ul.nav ul { min-width: 11.089em; width: 100%; margin: 0px; visibility: hidden; position: absolute; top: 100%; left: 0px; z-index: 9999; }
+  ul.nav ul li { float: none; }
+  ul.nav ul li a { width: 100%; font-size: 0.9em; display: inline-block; box-sizing: border-box; }
+  ul.nav ul ul { left: 100%; top: 0px; }
+  ul.nav li:hover > ul { visibility: visible; }
+  #top { position: fixed; top: 0px; left: 0px; }
+  #top ul.nav { font-size: 0.857em; text-align: left; }
+  #top ul.nav > li a { color: rgb(255, 255, 255); }
+  #top ul.nav > li:hover { background: rgba(0, 0, 0, 0.7); }
+  #top ul.nav > li:hover a { text-decoration: none; }
+  #top ul.nav ul { background: rgba(0, 0, 0, 0.85); border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; }
+  #top ul.nav ul li { display: block; }
+  #top ul.nav ul li a:hover { background: rgba(0, 0, 0, 0.7); }
+  #top ul.nav ul li:first-child a { border-top-left-radius: 5px; border-top-right-radius: 5px; }
+  #top ul.nav ul li:last-child a { border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; }
+  #top ul.nav ul ul { border-radius: 0px 5px 5px; }
+  .menu-toggle { display: none; }
+  .primary-navigation { display: block; }
+  .main-navigation ul li a::before { display: none; }
+  .main-navigation ul li:hover > ul { left: 0px; display: block; }
+  .main-navigation ul li:hover > ul li > ul { left: -9999px; }
+  .main-navigation ul li:hover > ul li:hover > ul { left: 100%; top: 0px; display: block; }
+  .primary-navigation { clear: both; background: rgba(0, 0, 0, 0.06); margin-left: -99em; margin-right: -99em; padding-left: 99em; padding-right: 99em; }
+  .primary-navigation::after { content: " "; display: block; height: 0px; overflow: hidden; clear: both; }
+  #header p { font-size: 3.631em; line-height: 1.25; }
+  span.heading { font-size: 1em; }
+  .widget h3 { text-align: left; }
+  .entry img { max-width: 100%; }
+}
+@media only screen and (min-width: 1600px) {
+  .col-full { max-width: 100em; }
+}
+#linuxblog-contact-form { max-width: 540px; }
+#linuxblog-contact-form p { margin: 0px 0px 1em; }
+#linuxblog-contact-form input[type="text"], #linuxblog-contact-form input[type="email"], #linuxblog-contact-form textarea { width: 100%; padding: 0.857em; font-size: 1em; font-family: inherit; color: rgb(34, 34, 34); border: 1px solid rgb(202, 202, 202); border-radius: 0.236em; box-sizing: border-box; background: rgb(255, 255, 255); transition: border-color 0.2s; }
+#linuxblog-contact-form input[type="text"]:focus, #linuxblog-contact-form input[type="email"]:focus, #linuxblog-contact-form textarea:focus { outline: none; border-color: rgb(0, 102, 255); }
+#linuxblog-contact-form textarea { min-height: 160px; resize: vertical; }
+#linuxblog-contact-form input[type="submit"] { display: inline-block; padding: 0.857em 1.618em; font-size: 1em; font-family: inherit; font-weight: 600; color: rgb(255, 255, 255); background: rgb(0, 102, 255); border: none; border-radius: 0.236em; cursor: pointer; transition: background 0.2s; }
+#linuxblog-contact-form input[type="submit"]:hover { background: rgb(30, 144, 255); }
+.lbcf-recaptcha { margin: 0px 0px 0.5em; }
+.lbcf-msg { padding: 0.857em 1em; margin: 0px 0px 1.618em; border-radius: 0.236em; border: 1px solid; }
+.lbcf-success { background: rgb(240, 250, 247); border-color: rgb(163, 217, 198); color: rgb(26, 86, 50); }
+.lbcf-error { background: rgb(254, 242, 242); border-color: rgb(245, 198, 198); color: rgb(153, 27, 27); }
+.lightbox-overlay { display: none; position: fixed; top: 0px; left: 0px; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 99999; cursor: pointer; justify-content: center; align-items: center; }
+.lightbox-overlay.active { display: flex; }
+.lightbox-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 2px; }
+p { margin: 0px 0px 0.618em; }
+.post .entry li { font-size: 1em; }
+#sidebar .widget { width: 100%; }
+#wpadminbar { display: none !important; }
+.comment-metadata, .comment-list { padding-inline-start: 0px; }
+.comment-author img { margin-right: 2px; border-radius: 50%; }
+.comment::marker { content: ""; }
+#reply-title.comment-reply-title a { padding: 10px; background-color: rgb(0, 94, 184); color: rgb(255, 255, 255); text-decoration: none; }
+#reply-title.comment-reply-title a:hover { background-color: rgb(0, 136, 204); color: rgb(255, 255, 255); }
+.site-icon { margin-right: 2px; border-radius: 50%; }
+.widget h3 { text-transform: none; }
+code { background: rgb(17, 17, 17); color: rgb(238, 238, 238); padding: 2px 5px; font-size: 15px; border-radius: 3px; }
+a code, code a { color: rgb(238, 238, 238); text-decoration: underline; }
+a:hover code, code a:hover, pre a:hover { color: rgb(80, 250, 123); }
+#top #top-nav { display: block; margin: 8px 0px 9px -0.1em; }
+ul.nav li a { display: block; padding: 1em 0.8em 0.8em 0.6em; font-size: 15px; }
+.hjmenulogo { padding-left: 6px; margin-left: 4px; width: 80px; height: 42px; background-image: url("https://static.linuxblog.io/wp-content/uploads/2023/12/linux_blog_logo_01.png") !important; background-repeat: no-repeat !important; background-position: left center !important; background-size: contain !important; }
+@media only screen and (max-width: 539px) {
+  .hjmenulogo { height: 41px; }
+}
+.hjmenulogo:hover { opacity: 0.6; transition: opacity 0.1s ease-in-out; }
+ul.nav li.current_page_item a { background: none !important; }
+@media only screen and (max-width: 539px) {
+  .hide-on-mobile { display: none !important; }
+  #top #top-nav { margin-left: -0.2em; }
+}
+.back-to-top { display: none; position: fixed; bottom: 50px; right: 20px; background-color: rgb(51, 51, 51); color: rgb(255, 255, 255); padding: 10px 20px; text-align: center; border-radius: 5px; text-decoration: none; transition: background-color 0.3s; z-index: 1000; }
+.back-to-top:hover { background-color: rgb(85, 85, 85); color: rgb(255, 255, 255); }
+div#ez-toc-container { background: rgb(218, 232, 252); border: 0px; min-height: 100px; contain: layout; }
+@media (max-width: 768px) {
+  div#ez-toc-container { width: 100%; box-sizing: border-box; padding: 0px 10px; }
+  .ez-toc-container { background: rgb(218, 232, 252); padding: 15px; border-radius: 8px; }
+  .ez-toc-list li { margin-bottom: 5px !important; }
+  .ez-toc-link { border-radius: 2px; transition: background-color 0.3s; font-size: 16px !important; line-height: 1.5 !important; padding: 5px 9px !important; display: block !important; }
+  .ez-toc-link:hover { background-color: rgb(194, 209, 240) !important; }
+}
+ul.display-posts-listing { list-style: none; padding: 0px; margin: 0px; }
+ul.display-posts-listing li.listing-item { margin-bottom: 0px; font-size: 1.1em; padding: 10px 15px; border-bottom: 1px solid rgb(221, 221, 221); transition: background-color 0.3s ease-in-out; }
+ul.display-posts-listing li.listing-item a { text-decoration: none; color: rgb(51, 51, 51); font-weight: 700; transition: color 0.3s ease-in-out; }
+ul.display-posts-listing li.listing-item:hover { background-color: rgb(218, 232, 252); }
+ul.display-posts-listing li.listing-item a:hover { text-decoration: underline; color: rgb(41, 98, 255); font-weight: 700; transition: font-weight 0.1s ease-in-out; }
+@media screen and (max-width: 768px) {
+  ul.display-posts-listing li.listing-item { font-size: 1.1em; padding: 10px 0.5em; }
+}
+.display-posts-listing .listing-item { display: flex; align-items: baseline; }
+.display-posts-listing .listing-item .title { flex-grow: 1; margin-left: 0px; }
+.display-posts-listing .listing-item .date { flex-shrink: 0; font-size: 13px; color: rgb(51, 51, 51); text-align: right; margin-left: 1em; }
+.dp-tag-filters { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 1.2em; }
+.dp-tag-btn { display: inline-block; padding: 5px 10px; background: rgb(34, 34, 34); color: rgb(238, 238, 238); border: none; border-radius: 5px; font-family: inherit; font-size: 15.4px; font-weight: 700; cursor: pointer; transition: background-color 0.3s; }
+.dp-tag-btn:hover { background: rgb(51, 51, 51); color: rgb(238, 238, 238); }
+.dp-tag-btn.active { background-color: rgb(221, 221, 221); color: rgb(34, 34, 34); }
+.dp-tag-btn.active:hover { background-color: rgb(218, 232, 252); color: rgb(41, 98, 255); }
+.display-posts-listing.filtered .listing-item { background-color: rgb(238, 238, 238); border-bottom-color: rgb(204, 204, 204); }
+.search_main { margin: 20px auto; padding: 10px; background-color: rgb(248, 248, 248); border-radius: 5px; box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 5px; }
+.searchform .field { flex-grow: 1; padding: 10px 15px; font-size: 16px; border: 1px solid rgb(204, 204, 204); border-radius: 5px 0px 0px 5px; background-color: rgb(255, 255, 255); }
+.searchform .search-submit { padding: 10px 15px; border: none; background-color: rgb(218, 232, 252); border-radius: 0px 5px 5px 0px; cursor: pointer; }
+.searchform .field:focus { border: 1px solid rgb(0, 86, 179); }
+.searchform .search-submit:hover { background-color: rgb(0, 86, 179); }
+@media screen and (max-width: 768px) {
+  .search_main { width: 92%; }
+  .searchform .field, .searchform .search-submit { font-size: 14px; }
+}
+.tags-list a { background-color: rgb(248, 248, 248); color: rgb(51, 51, 51); padding: 5px 10px; margin: 2px; border-radius: 5px; display: inline-block; text-decoration: none; transition: background-color 0.3s; }
+.tags-list a:hover { color: rgb(41, 98, 255); text-decoration: underline; background-color: rgb(218, 232, 252); }
+.menu-item-type-post_type.menu-item-object-page.menu-item-17894 a:hover span { color: rgb(18, 188, 18) !important; }
+h2 { margin-bottom: 4px; }
+h3 { margin-bottom: 4px; }
+h4 { font-size: 1.1em; margin-bottom: 5px; }
+h5 { font-size: 1em; }
+@media screen and (max-width: 799px) {
+  .hayden-after-paragraph, .hayden-after-paragraph-mobile, .hayden-end-of-article, .hayden-end-of-article-mobile { min-height: 395px; position: relative; }
+  .hayden-after-paragraph::before, .hayden-after-paragraph-mobile::before, .hayden-end-of-article::before, .hayden-end-of-article-mobile::before { content: ""; display: block; height: 20px; }
+  .hayden-after-paragraph::after, .hayden-after-paragraph-mobile::after, .hayden-end-of-article::after, .hayden-end-of-article-mobile::after { content: ""; display: block; height: 20px; }
+  .hayden-after-paragraph > div[align="center"], .hayden-after-paragraph-mobile > div[align="center"], .hayden-end-of-article > div[align="center"], .hayden-end-of-article-mobile > div[align="center"] { position: absolute; left: 0px; right: 0px; bottom: 8px; }
+}
+@media screen and (min-width: 800px) {
+  .hayden-after-paragraph { min-height: 330px; }
+  .hayden-end-of-article { min-height: 320px; margin-top: 20px; }
+}
+.hayden-after-paragraph > div[align="center"], .hayden-end-of-article > div[align="center"] { margin: 0px; padding: 0px; line-height: 14px; }
+#top, #wrapper { max-width: 100%; margin: 0px auto; }
+#header, #footer, #top, .widget, #content { box-sizing: border-box; padding-left: 0.618em !important; padding-right: 0.618em !important; }
+.col-full { max-width: 1300px; margin: 0px auto; }
+@media only screen and (min-width: 1024px) {
+  .col-full { padding-left: 0.938em; }
+}
+.browse-link { display: inline-block; margin-top: 5px; padding: 4px; background: rgb(232, 248, 245); color: rgb(0, 94, 184); font-size: 14px; text-decoration: none; transition: background 0.2s; }
+.browse-link:hover { background: rgb(204, 234, 227); }
+.discourse-comments-area img.emoji { width: 1.25em; height: 1.25em; max-width: none; }
+.discourse-comments-area li.comment { margin: 0px; list-style: none; }
+.comment-content img:not(.emoji) { object-fit: contain; max-width: 100% !important; height: auto !important; width: auto !important; }
+.comment-author img, .comment-avatar { border-radius: 50%; margin-right: 10px; width: 45px !important; height: 45px !important; }
+.comment-header { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.3rem; }
+.comment-header time { margin-left: auto; font-size: 1em; color: rgb(145, 145, 145); }
+.discourse-comments-area hr { display: none; }
+.comment-body { background: none; border-right: none; border-bottom: none; border-left: none; border-image: initial; border-top: 1px solid rgb(225, 227, 229); padding: 1rem 0px; margin-bottom: 0px; display: flex; gap: 0px; }
+.comment-body .comment-meta { flex-shrink: 0; }
+.comment-body .comment-content { flex: 1 1 0%; min-width: 0px; }
+.comment-meta { flex-direction: column; align-items: flex-start; gap: 0px; padding: 0px; margin-right: 12px; min-width: 45px; display: flex !important; border-top: none !important; }
+.comment-meta .comment-author { display: flex; flex-direction: column; align-items: center; }
+.comment-meta time { display: none; }
+.comment-meta .fn { display: none; }
+.comment-content .discourse-username { font-weight: 700; color: rgb(89, 98, 107); font-size: 1.15em; }
+.comment-content .discourse-username a { color: rgb(89, 98, 107); text-decoration: none; }
+.comment-content .discourse-username a:hover { color: rgb(0, 94, 184); }
+.comment-content { line-height: 1.65; }
+.comment-content a.mention { display: inline-block; font-size: 0.93em; font-weight: normal; color: rgb(34, 34, 34); padding: 0.2em 0.34em; background: rgb(233, 233, 233); border-radius: 0.6em; text-decoration: none; text-wrap: nowrap; line-height: 1; }
+.comment-content a.mention:hover { background: rgb(220, 220, 220); }
+.discourse-comments-title { font-size: 1.3em; padding-bottom: 0.5rem; margin-bottom: 0px; border-bottom: none; }
+.discourse-comments-area li.comment:last-of-type .comment-body { border-bottom: 1px solid rgb(225, 227, 229); }
+.discourse-comments-area .comment-respond .comment-meta { display: none !important; }
+.discourse-comments-area .onebox .site-icon img, .discourse-comments-area .onebox img.site-icon, .discourse-comments-area .onebox-header img { object-fit: contain; width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; }
+aside.onebox { border: 5px solid rgb(233, 233, 233); margin-bottom: 1em; padding: 12px 25px 12px 12px; font-size: 1em; }
+aside.onebox .site-icon { width: 16px; height: 16px; margin-right: 6px; vertical-align: middle; }
+aside.onebox > a[href] { color: rgb(85, 85, 85); text-decoration: none; font-size: 0.85em; vertical-align: middle; }
+article.onebox-body { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; margin-top: 10px; }
+.aspect-image { grid-row: 1 / 3; max-width: 120px; }
+.aspect-image img, aside.onebox .onebox-body img { width: 100%; height: auto; display: block; }
+aside.onebox .onebox-body .onebox-avatar { max-height: none; max-width: none; height: 60px; width: 60px; grid-row: 1 / 3; }
+aside.onebox .onebox-body h3, aside.onebox .onebox-body h4 { font-size: 1em; margin: 0px; padding-top: 0px; }
+aside.onebox .onebox-body a[href] { color: rgb(0, 68, 204); text-decoration: none; }
+aside.onebox .onebox-body p { margin: 0px; }
+aside.onebox .onebox-metadata, aside.onebox > div[style] { display: none; }
+.comment-body .quote .title { border-left: 5px solid rgb(233, 233, 233); background-color: rgb(249, 249, 249); color: rgb(100, 100, 100); padding: 12px 12px 1px; }
+.comment-content > blockquote { border-left: 4px solid rgb(85, 85, 85); background: rgb(245, 245, 245); padding: 12px 16px; margin: 0px 0px 1em; }
+.comment-body .quote blockquote { border-left: 5px solid rgb(233, 233, 233); background-color: rgb(249, 249, 249); font-size: 1em; padding: 12px; margin: 0px; border-top: none; border-right: none; border-bottom: none; clear: both; }
+.comment-body .quote blockquote p:last-child { margin-bottom: 0px; }
+.comment-body aside.quote .title .avatar { margin-right: 7px; }
+.comment-body .quote .title a { color: rgb(0, 136, 204); }
+.comment-body .quote .title a .badge-category { color: rgb(34, 34, 34); }
+.comment-body .comment-meta { display: flex; gap: 1em; }
+.comment-body .comment-author { display: flex; gap: 1em; }
+span.badge-category-bg { width: 9px; height: 9px; display: inline-block; margin-right: 5px; margin-left: 5px; }
+.wpdc-poll-link, .wpdc-onebox-link { display: block; }
+.lightbox-wrapper .meta { display: none; }
+.discourse-comments-area ol { list-style: none; padding: 0px; }
+.discourse-comments-area .comment-reply-title { text-align: left; }
+.discourse-comments-area .comment-reply-title .wpdc-discourse-topic-link { margin-left: 0.25em; }
+.discourse-comments-area .comment-respond p:not(.comment-notes) { max-width: none; }
+#header p { font: 1.5em / 1em Arial, sans-serif; color: rgb(255, 255, 255); }
+body { background: rgb(255, 255, 255) !important; }
+body #wrapper #header .site-title a { font: bold 9px / 1em Arial, sans-serif; color: rgb(255, 255, 255); }
+#logo img { display: none; }
+.site-title { display: block !important; }
+.site-description { display: none !important; }
+.svc-hero-quote { text-align: center; font-size: 1.15em; color: rgb(85, 85, 85); margin-bottom: 1.618em; padding: 0.5em 0px 0px; }
+.svc-about p { margin: 0px; color: rgb(51, 51, 51); line-height: 1.7; }
+.svc-section { margin-bottom: 1.618em; }
+.svc-section h2, .svc-card h2 { margin-top: 0px; margin-bottom: 0.5em; font-weight: 700; }
+.svc-section > em, .svc-section > p > em { color: rgb(85, 85, 85); }
+.svc-section ul + p:has(.svc-cta) { margin-top: 0px; }
+.svc-section ul:has(+ p > .svc-cta) { margin-bottom: 0.3em; }
+.svc-card { margin-bottom: 1.618em; }
+.svc-section ul, .svc-card ul { list-style: none; margin-left: 0px; padding-left: 0px; }
+.svc-section ul li, .svc-card ul li { position: relative; padding-left: 1.6em; margin-bottom: 0.5em; line-height: 1.5; }
+.svc-section ul li::before, .svc-card ul li::before { content: "✓"; position: absolute; left: 0px; color: rgb(0, 102, 255); font-weight: 700; }
+.svc-cta { display: inline-block; padding: 0.65em 1.8em; background: rgb(0, 102, 255); border-radius: 0.236em; font-weight: 600; font-size: 0.95em; margin-top: 0.8em; transition: background 0.2s; color: rgb(255, 255, 255) !important; text-decoration: none !important; }
+.svc-cta:hover { background: rgb(30, 144, 255); }
+.svc-cta[style*="transparent"]:hover { background: rgba(255, 255, 255, 0.15) !important; }
+.svc-cta[style*="#444"]:hover { background: rgb(102, 102, 102) !important; }
+.svc-cta[style*="#111"]:hover { background: rgb(51, 51, 51) !important; }
+.svc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2em; margin-bottom: 1.618em; }
+.svc-grid-item { background: rgb(248, 249, 250); border: 1px solid rgb(233, 233, 233); border-radius: 6px; padding: 1.4em 1.6em; }
+.svc-grid-item strong { display: block; margin-bottom: 0.3em; color: rgb(0, 0, 0); }
+.svc-extras { margin-bottom: 1.618em; }
+.svc-extras p { margin-bottom: 0.8em; }
+.svc-testimonials { margin-top: 1em; }
+.svc-quote { padding: 0.8em 0px 1.2em; margin-bottom: 0px; border-bottom: 1px solid rgb(233, 233, 233); }
+.svc-quote:last-child { border-bottom: none; }
+.svc-quote p { font-style: italic; color: rgb(51, 51, 51); margin: 0px 0px 0.4em; }
+.svc-quote cite { font-style: normal; font-weight: 600; font-size: 0.9em; color: rgb(85, 85, 85); }
+.svc-quote cite a { color: rgb(0, 102, 255); }
+.svc-banner { background: radial-gradient(600px 320px at 88% -10%, rgba(59, 130, 246, 0.2), transparent 62%), radial-gradient(520px 320px at 104% 110%, rgba(139, 92, 246, 0.16), transparent 62%), rgb(4, 6, 10); color: rgb(237, 241, 247); text-align: left; padding: 2.4em 2.6em 1.9em; border-radius: 10px; margin: 1em 0px 1.618em; }
+.svc-banner h2 { font-size: 1.75em; font-weight: 800; line-height: 1.18; letter-spacing: -0.015em; padding-bottom: 0.45em; position: relative; color: rgb(237, 241, 247) !important; }
+.svc-banner h2::after { content: ""; position: absolute; left: 0px; bottom: 0px; width: 64px; height: 3px; background: rgb(91, 167, 247); border-radius: 2px; }
+.svc-banner .svc-accent { color: rgb(91, 167, 247); white-space: nowrap; }
+@media only screen and (max-width: 700px) {
+  .svc-banner .svc-accent { white-space: normal; }
+}
+.svc-banner p { color: rgb(147, 160, 180); margin-bottom: 1.1em; font-size: 0.975em; }
+.svc-banner .svc-logo { display: block; margin: 0px 0px 1.3em; width: 168px; height: auto; }
+.svc-variant { display: none; }
+.svc-variant.on { display: flex; flex-direction: column; align-items: flex-start; }
+.svc-variant.on .svc-cta { align-self: flex-start; }
+.svc-banner .svc-sub { color: rgb(201, 212, 227); font-weight: 600; font-size: 1.08em; margin-bottom: 0.45em; }
+.svc-banner .svc-cta { display: inline-block; margin-top: 0.3em; }
+@media only screen and (max-width: 600px) {
+  .svc-banner { padding: 1.7em 1.4em 1.5em; }
+  .svc-banner h2 { font-size: 1.4em; }
+  .svc-variant.on .svc-cta { align-self: stretch; text-align: center; }
+}
+.svc-banner .svc-cta { font-size: 1.05em; padding: 0.75em 2.2em; }
+.social-links { display: flex; flex-wrap: wrap; gap: 0.4em 0px; align-items: center; margin: 0.5em 0px 1em; }
+.social-links a { color: rgb(0, 102, 255); text-decoration: none; font-weight: 600; }
+.social-links a:hover { text-decoration: underline; }
+.social-links .sep { color: rgb(153, 153, 153); margin: 0px 0.5em; }
+.about-notice { font-size: 1em; color: rgb(34, 34, 34); text-align: center; margin-top: 2em; margin-bottom: 1em; }
+.about-notice a { color: rgb(34, 34, 34); text-decoration: underline; }
+.photo-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1em; margin-bottom: 1.618em; }
+.photo-row .photo-item { line-height: 0; }
+.photo-row .photo-item a.photo-link { display: block; }
+.photo-row .photo-item br { display: none; }
+.type-page .photo-row .photo-item img { width: 100%; height: 175px; object-fit: cover; border-radius: 4px; display: block; margin: 0px; padding: 0px; }
+.photo-row .photo-item .photo-caption { font-size: 1.1em; color: rgb(85, 85, 85); margin-top: 0.3em; display: block; line-height: 1.618; }
+.photo-row .photo-item p { margin: 0px; }
+.photo-row .photo-item .photo-caption a { color: rgb(0, 102, 255); }
+.archive-title { font-size: 1.5em; margin: 0px 0px 0.8em; }
+a.featured-latest-post { display: flex; gap: 1.5em; align-items: flex-start; background: rgb(245, 249, 255); padding: 0.8em 15px; margin-bottom: 0px; border-bottom: 1px solid rgb(229, 229, 229); transition: background-color 0.2s; text-decoration: none; color: inherit; }
+a.featured-latest-post:hover { background-color: rgb(218, 232, 252); text-decoration: none; }
+.featured-latest-post .featured-text { flex: 1 1 0%; min-width: 0px; }
+.featured-latest-post .featured-title { margin: 0px; font-size: 1.5em; color: rgb(34, 34, 34); }
+a.featured-latest-post:hover .featured-title { color: rgb(41, 98, 255); text-decoration: underline; }
+.featured-latest-post .featured-meta { display: block; font-size: 13px; color: rgb(51, 51, 51); margin: 0.3em 0px 0.5em; }
+.featured-latest-post .featured-text p { margin: 0px; font-size: 0.95em; color: rgb(51, 51, 51); line-height: 1.6; }
+.featured-latest-post .featured-thumb { flex-shrink: 0; width: 300px; aspect-ratio: 868 / 488; overflow: hidden; }
+.featured-latest-post .featured-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.post .post-date-author { font-size: 0.95em; }
+#post-entries .nav-prev a, #post-entries .nav-next a { font-size: 1em; }
+#post-entries small { font-size: 0.9em; }
+.browse-link { font-size: 15px; }
+.widget_recent_entries ul li a { font-size: 13.7px; }
+.home .entry h2 { font-size: 1.188em; }
+#sidebar .widget h3 { font-size: 1.24em; }
+@media only screen and (max-width: 768px) {
+  .svc-grid { grid-template-columns: 1fr; }
+  .photo-row { grid-template-columns: 1fr; }
+  .type-page .photo-row .photo-item img { height: auto; }
+  .svc-grid-item { padding: 1em 1.2em; }
+  a.featured-latest-post { flex-direction: column; padding: 0.8em; gap: 0px; }
+  a.featured-latest-post .featured-text { display: contents; }
+  a.featured-latest-post .featured-title { order: 1; }
+  a.featured-latest-post .featured-meta { order: 2; }
+  a.featured-latest-post .featured-thumb { order: 3; width: 100%; margin: 0.5em 0px; }
+  a.featured-latest-post .featured-text p { order: 4; }
+  .display-posts-listing .listing-item { flex-wrap: wrap; max-width: 100%; }
+  .display-posts-listing .listing-item .title { width: 100%; }
+  .display-posts-listing .listing-item .date { width: 100%; text-align: right; margin-left: 0px; }
+}
+@media (max-width: 860px) {
+  .lcio-ext { font-size: 0.7em; }
+}
+#ez-toc-container { background: rgb(249, 249, 249); border: 1px solid rgb(170, 170, 170); border-radius: 4px; box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 1px; display: table; margin-bottom: 1em; padding: 10px 20px 10px 10px; position: relative; width: auto; }
+div.ez-toc-widget-container { padding: 0px; position: relative; }
+#ez-toc-container.ez-toc-light-blue { background: rgb(237, 246, 255); }
+#ez-toc-container.ez-toc-white { background: rgb(255, 255, 255); }
+#ez-toc-container.ez-toc-black { background: rgb(0, 0, 0); }
+#ez-toc-container.ez-toc-transparent { background: none rgba(255, 255, 255, 0); }
+div.ez-toc-widget-container ul { display: block; }
+div.ez-toc-widget-container li { border: none; padding: 0px; }
+div.ez-toc-widget-container ul.ez-toc-list { padding: 10px; }
+#ez-toc-container ul ul, .ez-toc div.ez-toc-widget-container ul ul { margin-left: 1.5em; }
+#ez-toc-container ul, #ez-toc-container li { margin: 0px; padding: 0px; }
+#ez-toc-container ul, #ez-toc-container li, #ez-toc-container ul li, div.ez-toc-widget-container, div.ez-toc-widget-container li { background: none; list-style: none none; line-height: 1.6; margin: 0px; overflow: hidden; z-index: 1; }
+#ez-toc-container .ez-toc-title { text-align: left; line-height: 1.45; margin: 0px; padding: 0px; }
+.ez-toc-title-container { display: table; width: 100%; }
+.ez-toc-title, .ez-toc-title-toggle { display: inline; text-align: left; vertical-align: middle; }
+#ez-toc-container.ez-toc-black p.ez-toc-title { color: rgb(255, 255, 255); }
+#ez-toc-container div.ez-toc-title-container + ul.ez-toc-list { margin-top: 1em; }
+.ez-toc-wrap-left { margin: 0px auto 1em 0px !important; }
+.ez-toc-wrap-left-text { float: left; }
+.ez-toc-wrap-right { margin: 0px 0px 1em auto !important; }
+.ez-toc-wrap-right-text { float: right; }
+#ez-toc-container a { color: rgb(68, 68, 68); box-shadow: none; text-decoration: none; text-shadow: none; display: inline-flex; align-items: stretch; flex-wrap: nowrap; }
+#ez-toc-container a:visited { color: rgb(159, 159, 159); }
+#ez-toc-container a:hover { text-decoration: underline; }
+#ez-toc-container.ez-toc-black a { color: rgb(255, 255, 255); }
+#ez-toc-container.ez-toc-black a:visited { color: rgb(255, 255, 255); }
+#ez-toc-container a.ez-toc-toggle { display: flex; align-items: center; color: rgb(68, 68, 68); }
+.ez-toc-widget-container ul.ez-toc-list li::before { content: " "; position: absolute; left: 0px; right: 0px; height: 30px; line-height: 30px; z-index: -1; }
+.ez-toc-widget-container ul.ez-toc-list li.active { background-color: rgb(237, 237, 237); }
+.ez-toc-widget-container li.active > a { font-weight: 900; }
+.ez-toc-btn { display: inline-block; padding: 6px 12px; margin-bottom: 0px; font-size: 14px; font-weight: 400; line-height: 1.42857; text-align: center; white-space: nowrap; vertical-align: middle; cursor: pointer; background-image: none; border: 1px solid rgba(255, 255, 255, 0); border-radius: 4px; user-select: none; }
+.ez-toc-btn:focus { outline: -webkit-focus-ring-color auto 5px; outline-offset: -2px; }
+.ez-toc-btn:hover, .ez-toc-btn:focus { color: rgb(51, 51, 51); text-decoration: none; }
+.ez-toc-btn:active, .ez-toc-btn.active { background-image: none; outline: 0px; box-shadow: rgba(0, 0, 0, 0.125) 0px 3px 5px inset; }
+.ez-toc-btn-default { color: rgb(51, 51, 51); background-color: rgb(255, 255, 255); border-color: rgb(204, 204, 204); }
+.ez-toc-btn-default:hover, .ez-toc-btn-default:focus, .ez-toc-btn-default:active, .ez-toc-btn-default.active { color: rgb(51, 51, 51); background-color: rgb(235, 235, 235); border-color: rgb(173, 173, 173); }
+.ez-toc-btn-default:active, .ez-toc-btn-default.active { background-image: none; }
+.ez-toc-btn-sm, .ez-toc-btn-xs { padding: 5px 10px; font-size: 12px; line-height: 1.5; border-radius: 3px; }
+.ez-toc-btn-xs { padding: 1px 5px; }
+.ez-toc-btn-default { text-shadow: rgba(0, 0, 0, 0.2) 0px -1px 0px; box-shadow: rgba(255, 255, 255, 0.15) 0px 1px 0px inset, rgba(0, 0, 0, 0.075) 0px 1px 1px; }
+.ez-toc-btn-default:active { box-shadow: rgba(0, 0, 0, 0.125) 0px 3px 5px inset; }
+.ez-toc-btn:active, .btn.active { background-image: none; }
+.ez-toc-btn-default { text-shadow: rgb(255, 255, 255) 0px 1px 0px; background-image: linear-gradient(rgb(255, 255, 255) 0px, rgb(224, 224, 224) 100%); background-repeat: repeat-x; border-color: rgb(204, 204, 204); }
+.ez-toc-btn-default:hover, .ez-toc-btn-default:focus { background-color: rgb(224, 224, 224); background-position: 0px -15px; }
+.ez-toc-btn-default:active, .ez-toc-btn-default.active { background-color: rgb(224, 224, 224); border-color: rgb(219, 219, 219); }
+.ez-toc-pull-right { float: right !important; margin-left: 10px; }
+#ez-toc-container label.cssicon, #ez-toc-widget-container label.cssicon { height: 30px; }
+.ez-toc-glyphicon { position: relative; top: 1px; display: inline-block; font-family: "Glyphicons Halflings"; -webkit-font-smoothing: antialiased; font-style: normal; font-weight: 400; line-height: 1; }
+.ez-toc-glyphicon:empty { width: 1em; }
+.ez-toc-toggle i.ez-toc-glyphicon { font-size: 16px; margin-left: 2px; }
+#ez-toc-container input { position: absolute; left: -999em; }
+#ez-toc-container input[type="checkbox"]:checked + nav, #ez-toc-widget-container input[type="checkbox"]:checked + nav { opacity: 0; max-height: 0px; border: none; display: none; }
+#ez-toc-container label { position: relative; cursor: pointer; display: initial; }
+#ez-toc-container .ez-toc-js-icon-con { position: relative; cursor: pointer; display: initial; }
+#ez-toc-container .ez-toc-toggle label { float: right; position: relative; font-size: 16px; padding: 0px; border: 1px solid rgb(153, 145, 145); border-radius: 5px; cursor: pointer; left: 10px; width: 35px; }
+#ez-toc-container .ez-toc-js-icon-con { float: right; position: relative; font-size: 16px; padding: 0px; border: 1px solid rgb(153, 145, 145); border-radius: 5px; cursor: pointer; left: 10px; width: 35px; }
+div#ez-toc-container .ez-toc-title { display: initial; }
+.ez-toc-wrap-center { margin: 0px auto 1em !important; }
+#ez-toc-container a.ez-toc-toggle { color: rgb(68, 68, 68); background: inherit; border: inherit; }
+.ez-toc-toggle #item { position: absolute; left: -999em; }
+label.cssicon .ez-toc-glyphicon:empty { font-size: 16px; margin-left: 2px; }
+label.cssiconcheckbox { display: none; }
+.ez-toc-widget-container ul li a { padding-left: 10px; display: inline-flex; align-items: stretch; flex-wrap: nowrap; }
+.ez-toc-widget-container ul.ez-toc-list li { height: auto !important; }
+.ez-toc-cssicon { float: right; position: relative; font-size: 16px; padding: 0px; border: 1px solid rgb(153, 145, 145); border-radius: 5px; cursor: pointer; left: 10px; width: 35px; }
+.ez-toc-icon-toggle-span { display: flex; align-items: center; width: 35px; height: 30px; justify-content: center; direction: ltr; }
+#ez-toc-container .eztoc-toggle-hide-by-default { display: none; }
+.eztoc_no_heading_found { background-color: rgb(255, 255, 0); padding-left: 10px; }
+.eztoc-hide { display: none; }
+.term-description .ez-toc-title-container p:nth-child(2) { width: 50px; float: right; margin: 0px; }
+.ez-toc-list.ez-toc-columns-2 { column-count: 2; column-gap: 20px; column-fill: balance; }
+.ez-toc-list.ez-toc-columns-2 > li { display: block; margin-bottom: 8px; break-inside: avoid; }
+.ez-toc-list.ez-toc-columns-3 { column-count: 3; column-gap: 20px; column-fill: balance; }
+.ez-toc-list.ez-toc-columns-3 > li { display: block; margin-bottom: 8px; break-inside: avoid; }
+.ez-toc-list.ez-toc-columns-4 { column-count: 4; column-gap: 20px; column-fill: balance; }
+.ez-toc-list.ez-toc-columns-4 > li { display: block; margin-bottom: 8px; break-inside: avoid; }
+.ez-toc-list.ez-toc-columns-optimized { column-fill: balance; orphans: 2; widows: 2; }
+.ez-toc-list.ez-toc-columns-optimized > li { display: block; break-inside: avoid; }
+@media (max-width: 768px) {
+  .ez-toc-list.ez-toc-columns-2, .ez-toc-list.ez-toc-columns-3, .ez-toc-list.ez-toc-columns-4 { column-count: 1; column-gap: 0px; }
+}
+@media (max-width: 1024px) and (min-width: 769px) {
+  .ez-toc-list.ez-toc-columns-4 { column-count: 2; }
+  .ez-toc-list.ez-toc-columns-3 { column-count: 2; }
+}
+.fusion-footer #ez-toc-container { display: none; }
+.ez-toc-container-direction { direction: ltr; }
+.ez-toc-counter ul { direction: ltr; counter-reset: item 0; }
+.ez-toc-counter nav ul li a::before { content: counter(item, disc) "  "; margin-right: 0.2em; counter-increment: item 1; flex-grow: 0; flex-shrink: 0; float: left; }
+.ez-toc-widget-direction { direction: ltr; }
+.ez-toc-widget-container ul { direction: ltr; counter-reset: item 0; }
+.ez-toc-widget-container nav ul li a::before { content: counter(item, disc) "  "; margin-right: 0.2em; counter-increment: item 1; flex-grow: 0; flex-shrink: 0; float: left; }
+div#ez-toc-container .ez-toc-title { font-size: 150%; }
+div#ez-toc-container .ez-toc-title { font-weight: 700; }
+div#ez-toc-container ul li, div#ez-toc-container ul li a { font-size: 100%; }
+div#ez-toc-container ul li, div#ez-toc-container ul li a { font-weight: 500; }
+div#ez-toc-container nav ul ul li { font-size: 100%; }
+div#ez-toc-container { background: rgb(218, 232, 252); border: 1px solid rgb(255, 255, 255); width: 96.5%; }
+div#ez-toc-container p.ez-toc-title, #ez-toc-container .ez_toc_custom_title_icon, #ez-toc-container .ez_toc_custom_toc_icon { color: rgb(0, 0, 0); }
+div#ez-toc-container ul.ez-toc-list a { color: rgb(0, 0, 0); }
+div#ez-toc-container ul.ez-toc-list a:hover { color: rgb(99, 148, 191); }
+div#ez-toc-container ul.ez-toc-list a:visited { color: rgb(0, 0, 0); }
+.ez-toc-counter nav ul li a::before { }
+.ez-toc-counter nav ul li a::before { color: rgb(0, 0, 0); }
+.ez-toc-box-title { font-weight: bold; margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 1px; color: rgb(102, 102, 102); padding-bottom: 5px; position: absolute; top: -4%; left: 5%; background-color: inherit; transition: top 0.3s; }
+.ez-toc-box-title.toc-closed { top: -25%; }
+ul.ez-toc-list a.ez-toc-link { padding: 2px 0px; }
+.hayden-parallax-container { position: relative; display: block; overflow: hidden; clear: both; margin: 0px; padding: 0px; z-index: 1; }
+.hayden-parallax-clip { position: absolute; inset: 0px; clip-path: inset(0px); }
+.hayden-parallax-inner { position: fixed; top: 0px; left: 0px; width: 100%; height: 100vh; display: flex; justify-content: center; align-items: center; will-change: transform; visibility: hidden; z-index: -1; pointer-events: none; }
+.hayden-parallax-content-block { width: 100%; height: auto; pointer-events: auto; }
+.hayden-parallax-content-block img { display: block; margin: 0px auto; max-width: 100%; height: auto; object-fit: contain; }
+.hayden-parallax-content-block .unslider { overflow: visible !important; }
+.hayden-parallax-content-block .unslider-wrap { display: flex !important; }
+#lcio-sheet { position: fixed; left: 0px; right: 0px; bottom: 0px; z-index: 999990; background: rgb(0, 0, 0); color: rgb(255, 255, 255); display: flex; align-items: center; justify-content: center; gap: 34px; padding: 30px 44px 26px 32px; border-radius: 0px; box-shadow: rgba(0, 0, 0, 0.45) 0px -10px 40px; transform: translateY(110%); visibility: hidden; transition: transform 0.35s, visibility 0.35s; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; }
+#lcio-sheet.lcio-sheet-visible { transform: translateY(0px); visibility: visible; }
+#lcio-sheet::before { content: ""; position: absolute; top: 0px; left: 0px; right: 0px; height: 3px; background: linear-gradient(90deg, rgba(76, 175, 80, 0) 0%, rgb(76, 175, 80) 30%, rgb(76, 175, 80) 70%, rgba(76, 175, 80, 0) 100%); z-index: 3; }
+#lcio-sheet-close { position: absolute; top: 8px; right: 14px; background: transparent; border: 0px; color: rgb(255, 255, 255); font-size: 34px; line-height: 1; cursor: pointer; padding: 4px 8px; z-index: 2; opacity: 0.85; }
+#lcio-sheet-close:hover, #lcio-sheet-close:focus { opacity: 1; outline: none; }
+#lcio-sheet picture { display: contents; }
+#lcio-sheet-hero { width: 460px; height: auto; border-radius: 8px; flex: 0 0 auto; }
+#lcio-sheet-body { flex: 0 1 680px; min-width: 0px; }
+#lcio-sheet-title { font-size: 31px; font-weight: 800; line-height: 1.2; margin: 0px 0px 8px; }
+#lcio-sheet-sub { font-size: 18px; color: rgb(204, 204, 204); margin: 0px 0px 5px; }
+#lcio-sheet-sub .lcio-plus { color: rgb(76, 175, 80); font-weight: 700; }
+#lcio-sheet-count { font-size: 17px; color: rgb(157, 157, 157); margin: 0px 0px 18px; }
+#lcio-sheet-form { display: flex; gap: 12px; margin: 0px 0px 12px; }
+#lcio-sheet-email { flex: 1 1 55%; min-width: 0px; padding: 20px 18px; border: 1px solid rgb(85, 85, 85); border-radius: 4px; background: rgb(255, 255, 255); color: rgb(17, 17, 17); font-size: 19px; }
+#lcio-sheet-email:focus { outline: none; border-color: rgb(76, 175, 80); }
+#lcio-sheet-email[aria-invalid="true"] { border-color: rgb(229, 57, 53); }
+#lcio-sheet-cta { flex: 0 0 auto; background: rgb(76, 175, 80); color: rgb(0, 0, 0); border: 0px; border-radius: 4px; padding: 20px 32px; font-size: 24px; font-weight: 800; line-height: 1.1; cursor: pointer; }
+#lcio-sheet-cta:hover, #lcio-sheet-cta:focus { background: rgb(67, 160, 71); outline: none; }
+#lcio-sheet-consent { font-size: 12px; color: rgb(139, 139, 139); line-height: 1.4; margin: 0px; }
+.lcio-sheet-mobile { display: none; }
+@media (min-width: 861px) and (max-width: 1350px) {
+  #lcio-sheet { gap: 24px; padding: 24px 44px 20px 24px; }
+  #lcio-sheet-hero { width: 320px; }
+  #lcio-sheet-title { font-size: 26px; }
+  #lcio-sheet-sub { font-size: 16px; }
+  #lcio-sheet-count { font-size: 15px; margin: 0px 0px 14px; }
+  #lcio-sheet-email { padding: 15px 14px; font-size: 17px; }
+  #lcio-sheet-cta { padding: 15px 20px; font-size: 19px; }
+}
+@media (max-width: 860px) {
+  #lcio-sheet { flex-direction: column; gap: 10px; padding: 0px 16px 12px; text-align: left; max-height: 88vh; overflow-y: auto; }
+  #lcio-sheet-hero { width: calc(100% + 32px); max-width: none; margin: 0px -16px; height: 190px; object-fit: cover; object-position: center top; border-radius: 0px; }
+  #lcio-sheet-body { flex: 0 1 auto; width: 100%; max-width: none; }
+  #lcio-sheet-title { font-size: 22px; margin: 0px 0px 5px; }
+  #lcio-sheet-sub { font-size: 16px; margin: 0px 0px 3px; }
+  #lcio-sheet-count { font-size: 13px; margin: 0px 0px 10px; }
+  #lcio-sheet-form { gap: 8px; margin: 0px 0px 8px; }
+  #lcio-sheet-email { padding: 12px; font-size: 16px; }
+  #lcio-sheet-cta { padding: 12px 16px; font-size: 16px; }
+  #lcio-sheet-consent { font-size: 11px; }
+  #lcio-sheet-close { top: 8px; right: 8px; font-size: 28px; width: 42px; height: 42px; padding: 0px; background: rgba(0, 0, 0, 0.65); border-radius: 6px; opacity: 1; }
+  .lcio-sheet-desktop { display: none; }
+  .lcio-sheet-mobile { display: inline; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #lcio-sheet { transition: none; }
+}
+#onetrust-consent-sdk, #onetrust-banner-sdk, .onetrust-pc-dark-filter, .qc-cmp2-container, #qc-cmp2-container, [id^="sp_message_container"], .fc-consent-root, #usercentrics-root, #didomi-host, #cmpbox, #cmpbox2, #CybotCookiebotDialog, .truste_overlay, .truste_box_overlay, #cookie-notice, .cky-consent-container, #cookiescript_injected, .osano-cm-window, .pum, .pum-overlay, [class*="popmake"], .mfp-bg, .mfp-wrap, .modal-backdrop, .fancybox-overlay, [id^="om-"], .sgpb-popup-overlay, .elementor-popup-modal, .tve_p_lb_overlay, .mc-modal, .mc-modal-bg { display: none !important; }
+</style><style data-ir-guard="1">html, body { overflow-y: auto !important; height: auto !important; }</style></head>
+<body class="wp-singular post-template-default single single-post postid-22298 single-format-standard wp-theme-theonepager chrome alt-style-default has-top-nav layout-left-content">
+<div id="wrapper">
+    
+    
+	<div id="top">
+		<nav id="site-navigation" class="main-navigation col-full" aria-label="Primary Navigation">
+			<button class="menu-toggle" aria-controls="site-navigation" aria-expanded="false"><span>hayden_james@linux</span></button>
+			<div class="primary-navigation"><ul id="top-nav" class="nav"><li id="menu-item-8974" class="hjmenulogo menu-item menu-item-type-custom menu-item-object-custom menu-item-8974"><a href="/" title="LinuxBlog.io – Linux and Technology Blog by Hayden James">&nbsp;</a></li>
+<li id="menu-item-21888" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-21888"><a href="/">Home</a></li>
+<li id="menu-item-17825" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-17825"><a href="https://linuxblog.io/browse-articles/" title="Browse Articles">Articles</a></li>
+<li id="menu-item-18241" class="hide-on-mobile menu-item menu-item-type-post_type menu-item-object-page menu-item-18241"><a href="https://linuxblog.io/web-server-services/" title="Services available">Services</a></li>
+<li id="menu-item-17828" class="hide-on-mobile menu-item menu-item-type-post_type menu-item-object-page menu-item-17828"><a href="https://linuxblog.io/sponsors/" title="View our sponsors">Sponsors</a></li>
+<li id="menu-item-16013" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16013"><a href="https://linuxcommunity.io/" title="LinuxCommunity.io – Linux and tech forums">Community</a></li>
+<li id="menu-item-22552" class="hide-on-mobile menu-item menu-item-type-post_type menu-item-object-page menu-item-22552"><a href="https://linuxblog.io/about-me/" title="About this blog">About</a></li>
+<li id="menu-item-22551" class="hide-on-mobile menu-item menu-item-type-post_type menu-item-object-page menu-item-22551"><a href="https://linuxblog.io/connect/" title="Contact me">Contact</a></li>
+</ul></div>					</nav>
+	</div><!-- /#top -->
+
+ 
+	<header id="header">
+		<div class="col-full">
+		
+				    	
+
+	        
+		</div>
+	</header><!-- /#header -->
+
+		<main>
+       
+    <div id="content">
+    	
+    	<div class="col-full">
+    	
+    		    		
+			<section id="main" class="col-left">
+			           
+        					<article class="post-22298 post type-post status-publish format-standard hentry category-articles category-linux tag-hosting tag-security tag-server tag-sysadmins">
+			
+					        	        			
+        	        <header>
+						<h1><a href="https://linuxblog.io/linux-nameservers-dns-resolution/" rel="bookmark" title="Linux nameservers and DNS Resolution">Linux nameservers and DNS Resolution</a></h1>
+						<span class="post-date-author"><strong class="post-date">August 10, 2026</strong> by <strong class="post-author"><a href="https://linuxblog.io/author/hayden-james/" title="Posts by Hayden James" rel="author">Hayden James</a></strong>, in <a href="https://linuxblog.io/category/articles/" rel="category tag">Blog</a> <a href="https://linuxblog.io/category/linux/" rel="category tag">Linux</a></span>				
+					</header>
+        	        	
+        	        <section class="entry fix">
+        	        	<div id="instaread-demo-player-wrap" style="max-width: 871px !important;">
+<style>
+  #instaread-demo-player-wrap { margin:28px auto 30px !important; width:100% !important;
+    min-width:min(320px, 92vw) !important; max-width:100% !important;
+    clear:both !important; float:none !important; position:static !important;
+    display:block !important; flex:1 1 100%; }
+  #instaread-demo-player-wrap .instaread-player { display:block !important;
+    visibility:visible !important; opacity:1 !important;
+    background:#ffffff !important; border:1px solid #ececec;
+    border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.08); padding:18px 20px 12px;
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    text-align:left; color:#1b1b1b; line-height:1.4; box-sizing:border-box; }
+  #instaread-demo-player-wrap * { box-sizing:border-box; margin:0; padding:0; }
+  #instaread-demo-player-wrap .irp-top { display:flex; justify-content:space-between;
+    align-items:baseline; gap:16px; margin:0 0 10px; }
+  #instaread-demo-player-wrap .irp-label { font-size:15px; font-weight:700; color:#1b1b1b; }
+  #instaread-demo-player-wrap .irp-sponsor-tag { font-size:11.5px; color:#9a9a9a; white-space:nowrap; }
+  #instaread-demo-player-wrap .irp-mid { display:flex; align-items:center; gap:14px; }
+  #instaread-demo-player-wrap .irp-btn { flex:0 0 46px !important;
+    width:46px !important; height:46px !important; min-width:46px !important;
+    max-width:46px !important; min-height:46px !important; max-height:46px !important;
+    padding:0 !important; border-radius:50% !important; border:none !important;
+    background:#0066ff !important; cursor:pointer; display:flex !important;
+    align-items:center; justify-content:center; transition:transform .12s ease; }
+  #instaread-demo-player-wrap .irp-btn:hover { transform:scale(1.06); }
+  #instaread-demo-player-wrap .irp-btn svg { width:18px; height:18px; fill:#fff; display:block; }
+  #instaread-demo-player-wrap .irp-wave { flex:1 1 auto; height:44px !important;
+    display:flex !important; align-items:center; gap:1.5px; cursor:pointer;
+    min-width:0; visibility:visible !important; }
+  #instaread-demo-player-wrap .irp-wave span { flex:1 1 auto; min-width:1px;
+    background:#d6d6d6; border-radius:1px; transition:background .15s linear; }
+  #instaread-demo-player-wrap .irp-wave span.played { background:#3d3d3d; }
+  #instaread-demo-player-wrap .irp-ad { flex:0 1 190px; min-width:110px;
+    display:block !important; visibility:visible !important; opacity:1 !important; }
+  #instaread-demo-player-wrap .irp-ad svg.irp-ad-svg { display:block !important;
+    width:100%; max-width:190px; height:auto; border-radius:4px; }
+  #instaread-demo-player-wrap .irp-bottom { display:flex; justify-content:flex-end;
+    align-items:center; gap:6px; margin-top:8px; }
+  #instaread-demo-player-wrap .irp-time { font-size:11.5px; color:#a5a5a5;
+    margin-right:auto; font-variant-numeric:tabular-nums; }
+  #instaread-demo-player-wrap .irp-brand { display:flex; align-items:center; gap:4px;
+    font-size:10.5px; font-weight:600; color:#6a6a6a; }
+  #instaread-demo-player-wrap .irp-brand svg { width:8px; height:13px; }
+</style>
+<div class="instaread-player">
+  <div class="irp-top">
+    <div class="irp-label">Listen to audio version of this article</div>
+    <div class="irp-sponsor-tag">Sponsored by</div>
+  </div>
+  <div class="irp-mid">
+    <button class="irp-btn" id="irp-btn" aria-label="Play">
+      <svg id="irp-icon-play" viewBox="0 0 24 24" style="margin-left:2px"><path d="M8 5v14l11-7z"></path></svg>
+      <svg id="irp-icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"></path></svg>
+    </button>
+    <div class="irp-wave" id="irp-wave"><span style="height:53%"></span><span style="height:61%"></span><span style="height:66%"></span><span style="height:59%"></span><span style="height:85%"></span><span style="height:100%"></span><span style="height:100%"></span><span style="height:100%"></span><span style="height:100%"></span><span style="height:78%"></span><span style="height:62%"></span><span style="height:51%"></span><span style="height:68%"></span><span style="height:70%"></span><span style="height:48%"></span><span style="height:30%"></span><span style="height:15%"></span><span style="height:14%"></span><span style="height:38%"></span><span style="height:51%"></span><span style="height:36%"></span><span style="height:31%"></span><span style="height:50%"></span><span style="height:29%"></span><span style="height:42%"></span><span style="height:32%"></span><span style="height:36%"></span><span style="height:28%"></span><span style="height:14%"></span><span style="height:14%"></span><span style="height:14%"></span><span style="height:19%"></span><span style="height:32%"></span><span style="height:39%"></span><span style="height:61%"></span><span style="height:71%"></span><span style="height:87%"></span><span style="height:87%"></span><span style="height:80%"></span><span style="height:100%"></span><span style="height:93%"></span><span style="height:100%"></span><span style="height:76%"></span><span style="height:86%"></span><span style="height:93%"></span><span style="height:100%"></span><span style="height:73%"></span><span style="height:65%"></span><span style="height:37%"></span><span style="height:41%"></span><span style="height:59%"></span><span style="height:87%"></span><span style="height:98%"></span><span style="height:79%"></span><span style="height:60%"></span><span style="height:68%"></span><span style="height:82%"></span><span style="height:81%"></span><span style="height:72%"></span><span style="height:54%"></span><span style="height:67%"></span><span style="height:74%"></span><span style="height:77%"></span><span style="height:71%"></span><span style="height:69%"></span><span style="height:56%"></span><span style="height:76%"></span><span style="height:61%"></span><span style="height:77%"></span><span style="height:86%"></span><span style="height:63%"></span><span style="height:73%"></span><span style="height:81%"></span><span style="height:81%"></span><span style="height:73%"></span><span style="height:100%"></span><span style="height:76%"></span><span style="height:63%"></span><span style="height:76%"></span><span style="height:53%"></span><span style="height:35%"></span><span style="height:26%"></span><span style="height:30%"></span><span style="height:58%"></span><span style="height:60%"></span><span style="height:57%"></span><span style="height:37%"></span><span style="height:54%"></span></div>
+    <div class="irp-ad"><svg xmlns="http://www.w3.org/2000/svg" class="irp-ad-svg" width="190" height="52" viewBox="0 0 380 104">
+<defs><linearGradient id="irp-ad-grad" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#15161d"></stop><stop offset="1" stop-color="#2a466f"></stop>
+</linearGradient></defs>
+<rect width="380" height="104" rx="8" fill="url(#irp-ad-grad)"></rect>
+<text x="24" y="47" font-family="Arial, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="1">NOVA+</text>
+<text x="24" y="76" font-family="Arial, sans-serif" font-size="16" fill="#cfd3e0">
+New season · Stream now</text>
+<circle cx="330" cy="52" r="26" fill="#ffffff" opacity="0.92"></circle>
+<path d="M322 38 L346 52 L322 66 Z" fill="#15161d"></path>
+<rect x="6" y="6" width="30" height="16" rx="3" fill="#000" opacity="0.35"></rect>
+<text x="21" y="18" font-family="Arial, sans-serif" font-size="10" fill="#fff" text-anchor="middle">AD</text>
+</svg></div>
+  </div>
+  <div class="irp-bottom">
+    <div class="irp-time"><span id="irp-cur">0:00</span> / 14:56</div>
+    <div class="irp-brand">
+      <svg viewBox="0 0 15 26" fill="none">
+        <path fill="#3a3a3a" d="M0.5 0 H14.5 V16.8 A4.2 4.2 0 0 1 10.3 21 H4.7 A4.2 4.2 0 0 1 0.5 16.8 Z"></path>
+        <rect x="1.7" y="1.9" width="11.6" height="1.5" fill="#ffffff"></rect>
+        <rect x="1.7" y="4.5" width="11.6" height="1.5" fill="#ffffff"></rect>
+        <circle cx="7.5" cy="9.9" r="2.3" fill="#ffffff"></circle>
+        <rect x="5.7" y="13.2" width="3.6" height="7.8" fill="#ffffff"></rect>
+        <path fill="#3a3a3a" d="M4.9 21 H10.1 V26 L7.5 24.2 L4.9 26 Z"></path>
+      </svg>
+      Instaread
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var DURATION = 896;
+  var btn = document.getElementById('irp-btn');
+  var iconPlay = document.getElementById('irp-icon-play');
+  var iconPause = document.getElementById('irp-icon-pause');
+  var wave = document.getElementById('irp-wave');
+  var cur = document.getElementById('irp-cur');
+  var bars = wave.getElementsByTagName('span');
+  var playing = false, elapsed = 0, timer = null, last = 0;
+
+  function fmt(s) {
+    s = Math.max(0, Math.round(s));
+    return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+  }
+  function render() {
+    var frac = Math.min(1, elapsed / DURATION);
+    var n = Math.round(frac * bars.length);
+    for (var i = 0; i < bars.length; i++) {
+      bars[i].className = i < n ? 'played' : '';
+    }
+    cur.textContent = fmt(elapsed);
+  }
+  function tick() {
+    if (!playing) return;
+    var now = performance.now();
+    elapsed += (now - last) / 1000;
+    last = now;
+    if (elapsed >= DURATION) { elapsed = DURATION; stop(); }
+    render();
+  }
+  function start() {
+    if (elapsed >= DURATION) elapsed = 0;
+    playing = true;
+    iconPlay.style.display = 'none';
+    iconPause.style.display = 'block';
+    btn.setAttribute('aria-label', 'Pause');
+    last = performance.now();
+    timer = setInterval(tick, 100);
+  }
+  function stop() {
+    playing = false;
+    if (timer) { clearInterval(timer); timer = null; }
+    iconPlay.style.display = 'block';
+    iconPause.style.display = 'none';
+    btn.setAttribute('aria-label', 'Play');
+  }
+  btn.addEventListener('click', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    playing ? stop() : start();
+  });
+  wave.addEventListener('click', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    var r = wave.getBoundingClientRect();
+    elapsed = DURATION * Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    render();
+    if (!playing) start();
+  });
+  render();
+})();
+</script>
+</div><p>DNS resolution on Linux is one of those things that works silently until it doesn’t. Then suddenly you’re staring at “Temporary failure in resolving” errors and wondering why a perfectly healthy server can’t reach the internet. I’ve been there more than once.</p><div class="hayden-3b24a5f0acf2efbea5935db712c3b4bf hayden-after-paragraph-2" id="hayden-3b24a5f0acf2efbea5935db712c3b4bf"></div><div class="hayden-9af55d93eb500d76a38d80a81c923a47 hayden-after-paragraph" id="hayden-9af55d93eb500d76a38d80a81c923a47"><div class="hayden-after-paragraph hayden-entity-placement" id="hayden-3990120206"><div data-nosnippet="" id="hayden-3153863187" style="margin-left: auto;margin-right: auto;text-align: center;" data-hayden-trackid="20266" data-hayden-trackbid="1" class="hayden-target hayden-target"><a data-no-instant="1" href="https://betterstack.com/" rel="noopener nofollow sponsored" class="a2t-link" target="_blank" aria-label="Linux Logs and metrics: Better Stack"><img fetchpriority="high" loading="eager" src="https://linuxblog.io/wp-content/uploads/2025/04/logs-and-metrics-wide.png" alt="Linux Logs and metrics: Better Stack" srcset="https://linuxblog.io/wp-content/uploads/2025/04/logs-and-metrics-wide.png 868w, https://linuxblog.io/wp-content/uploads/2025/04/logs-and-metrics-wide-300x104.png 300w, https://linuxblog.io/wp-content/uploads/2025/04/logs-and-metrics-wide-560x194.png 560w" sizes="(max-width: 868px) 100vw, 868px" width="868" height="300" style="display: inline-block;"></a></div><div align="center" style="font-style: italic; font-size: 0.85em; font-weight: normal; margin-top: 4px;">
+	Advertisement
+</div></div></div>
+<p>This guide covers how DNS resolution actually works on Linux, the tools you use to inspect and troubleshoot it, and how to configure it correctly whether you’re running a desktop, a server with <code>systemd-resolved</code>, or a minimal VPS where <code>/etc/resolv.conf</code> is all you’ve got.</p>
+<p><img fetchpriority="high" decoding="async" class="alignnone wp-image-22568 size-large" title="How Linux Resolves DNS Names" src="https://static.linuxblog.io/wp-content/uploads/2026/08/dns-resolution-flow-868x488.png" alt="How Linux Resolves DNS Names" width="868" height="488" srcset="https://static.linuxblog.io/wp-content/uploads/2026/08/dns-resolution-flow-868x488.png 868w, https://static.linuxblog.io/wp-content/uploads/2026/08/dns-resolution-flow-300x169.png 300w, https://static.linuxblog.io/wp-content/uploads/2026/08/dns-resolution-flow-560x315.png 560w" sizes="(max-width: 868px) 100vw, 868px"></p>
+<p>When you run <code>curl https://example.com</code>, the system needs to turn that hostname into an IP address. The order in which it tries different sources is controlled by <code>/etc/nsswitch.conf</code>. Look for the <code>hosts</code> line:</p>
+<pre>hosts: files dns myhostname<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>This tells the resolver to check <code>/etc/hosts</code> first, then DNS, then resolve the local hostname through the <code>myhostname</code> module. The exact line varies by distribution and by which NSS modules are installed, so yours may list extra entries like <code>resolve</code> or <code>mymachines</code>. This matters more than most people realize. If you add an entry to <code>/etc/hosts</code>, it will always win over DNS for that name.</p>
+<p>The actual DNS servers the system queries are defined in <code>/etc/resolv.conf</code>. On modern systems running <code>systemd-resolved</code>, that file is often a symlink rather than a real file. More on that shortly.</p>
+<div id="ez-toc-container" class="ez-toc-v2_0_85 ez-toc-wrap-center counter-hierarchy ez-toc-counter ez-toc-custom ez-toc-container-direction">
+<div class="ez-toc-title-container"><div class="ez-toc-title" style="cursor:inherit">In This Article</div>
+</div><nav><ul class="ez-toc-list ez-toc-list-level-1 "><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-1" href="#Understanding_etcresolvconf">Understanding /etc/resolv.conf</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-2" href="#Check_Whats_Actually_Managing_Your_DNS">Check What’s Actually Managing Your DNS</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-3" href="#systemd-resolved_What_It_Does_and_How_to_Work_With_It">systemd-resolved: What It Does and How to Work With It</a><ul class="ez-toc-list-level-3"><li class="ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-4" href="#Check_the_Current_DNS_Configuration">Check the Current DNS Configuration</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-5" href="#Flush_the_DNS_Cache">Flush the DNS Cache</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-6" href="#Query_DNS_via_systemd-resolved">Query DNS via systemd-resolved</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-7" href="#Configure_Global_DNS_Servers_for_systemd-resolved">Configure Global DNS Servers for systemd-resolved</a></li></ul></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-8" href="#The_dig_Command_Your_Primary_DNS_Debugging_Tool">The dig Command: Your Primary DNS Debugging Tool</a><ul class="ez-toc-list-level-3"><li class="ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-9" href="#Basic_Query">Basic Query</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-10" href="#Query_a_Specific_DNS_Server">Query a Specific DNS Server</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-11" href="#Query_Specific_Record_Types">Query Specific Record Types</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-12" href="#Short_Output">Short Output</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-13" href="#Trace_the_Full_Resolution_Path">Trace the Full Resolution Path</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-14" href="#Check_DNSSEC">Check DNSSEC</a></li></ul></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-15" href="#getent_Test_the_Full_Resolution_Path">getent: Test the Full Resolution Path</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-16" href="#Other_Useful_DNS_Tools">Other Useful DNS Tools</a><ul class="ez-toc-list-level-3"><li class="ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-17" href="#nslookup">nslookup</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-18" href="#host">host</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-19" href="#systemd-resolved_statistics">systemd-resolved statistics</a></li></ul></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-20" href="#Common_DNS_Problems_and_Fixes">Common DNS Problems and Fixes</a><ul class="ez-toc-list-level-3"><li class="ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-21" href="#%E2%80%9CTemporary_failure_in_name_resolution%E2%80%9D">“Temporary failure in name resolution”</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-22" href="#DNS_Works_for_Some_Sites_but_Not_Others">DNS Works for Some Sites but Not Others</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-23" href="#Slow_DNS_Resolution">Slow DNS Resolution</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-24" href="#split-DNS_and_VPN_Issues">split-DNS and VPN Issues</a></li></ul></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-25" href="#Setting_Static_DNS_Without_Getting_Overwritten">Setting Static DNS Without Getting Overwritten</a><ul class="ez-toc-list-level-3"><li class="ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-26" href="#NetworkManager">NetworkManager</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-27" href="#systemd-resolved_global_fallback">systemd-resolved (global fallback)</a></li><li class="ez-toc-page-1 ez-toc-heading-level-3"><a class="ez-toc-link ez-toc-heading-28" href="#Static_etcresolvconf_on_a_server">Static /etc/resolv.conf on a server</a></li></ul></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-29" href="#Choosing_DNS_Resolvers">Choosing DNS Resolvers</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-30" href="#A_Quick_Troubleshooting_Checklist">A Quick Troubleshooting Checklist</a></li></ul></nav></div>
+<h2><span class="ez-toc-section" id="Understanding_etcresolvconf"></span>Understanding /etc/resolv.conf<span class="ez-toc-section-end"></span></h2>
+<p>On a minimal or older system, <code>/etc/resolv.conf</code> is a plain text file you edit directly. A typical one looks like this:</p>
+<pre>nameserver 1.1.1.1
+nameserver 8.8.8.8
+search example.com
+options ndots:5<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>The key directives:</p>
+<ul>
+<li><code>nameserver</code>: The IP of a DNS resolver to query. You can list up to three. With the traditional glibc resolver they’re tried in the order listed, with retries and failover if a server doesn’t respond. Note that a resolver manager like <code>systemd-resolved</code> can change this behavior.</li>
+<li><code>search</code>: A domain suffix appended when you query a short hostname. If you <code>ping webserver</code> and your search domain is <code>example.com</code>, the system will try <code>webserver.example.com</code> automatically.</li>
+<li><code>domain</code>: Similar to <code>search</code> but only one domain. If both are present, <code>search</code> wins.</li>
+<li><code>options ndots:5</code>: Controls when the search domain gets appended. A name with fewer dots than <code>ndots</code> is tried with the search suffix first, then as-is; a name with that many dots or more is tried as-is first. The default is 1, so <code>ndots:5</code> makes the resolver append the search domain to far more queries than usual, which causes confusion on servers with complex internal domain structures.</li>
+</ul>
+<p><em>Note: On Ubuntu 18.04+, Fedora, and most modern distros, <code>/etc/resolv.conf</code> is managed automatically. Editing it directly will work but your changes may be overwritten on reboot or after a network event.</em></p>
+<h2><span class="ez-toc-section" id="Check_Whats_Actually_Managing_Your_DNS"></span>Check What’s Actually Managing Your DNS<span class="ez-toc-section-end"></span></h2>
+<p>Before you change anything, find out what’s in control:</p>
+<pre>ls -la /etc/resolv.conf<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>You’ll see one of these situations:</p>
+<ul>
+<li>A regular file: it’s statically managed. Edit it directly or via your network manager config.</li>
+<li>A symlink to <code>/run/systemd/resolve/stub-resolv.conf</code>: <code>systemd-resolved</code> is active with the stub listener.</li>
+<li>A symlink to <code>/run/systemd/resolve/resolv.conf</code>: <code>systemd-resolved</code> is active but bypassing the stub listener.</li>
+<li>A symlink to <code>/run/NetworkManager/resolv.conf</code>: NetworkManager is managing it.</li>
+</ul>
+<p>Also check whether <code>systemd-resolved</code> is running:</p>
+<pre>systemctl status systemd-resolved<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h2><span class="ez-toc-section" id="systemd-resolved_What_It_Does_and_How_to_Work_With_It"></span>systemd-resolved: What It Does and How to Work With It<span class="ez-toc-section-end"></span></h2>
+<p><code>systemd-resolved</code> is a local DNS caching resolver that listens on <code>127.0.0.53:53</code>. It handles DNS for the whole system, caches results, supports DNSSEC, and manages <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd-resolved.service.html" target="_blank" rel="noopener">per-interface DNS settings</a>. Most Ubuntu and Fedora installs use it by default.</p>
+<p>The main tool for inspecting it is <a href="https://www.freedesktop.org/software/systemd/man/latest/resolvectl.html" target="_blank" rel="noopener"><code>resolvectl</code></a> (formerly <code>systemd-resolve</code>).</p>
+<h3><span class="ez-toc-section" id="Check_the_Current_DNS_Configuration"></span>Check the Current DNS Configuration<span class="ez-toc-section-end"></span></h3>
+<pre>resolvectl status<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>This shows the global DNS servers and per-interface settings. Useful output looks like:</p>
+<pre>Global
+       Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+resolveconf: no
+      DNS Servers: 192.168.1.1
+       DNS Domain: ~.
+
+Link 2 (eth0)
+    Current Scopes: DNS
+         Protocols: +DefaultRoute +LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+Current DNS Server: 192.168.1.1
+       DNS Servers: 192.168.1.1
+        DNS Domain: localdomain<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h3><span class="ez-toc-section" id="Flush_the_DNS_Cache"></span>Flush the DNS Cache<span class="ez-toc-section-end"></span></h3>
+<p>When a bad DNS record gets cached, this clears it:</p>
+<pre>sudo resolvectl flush-caches<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>Or on older systems:</p>
+<pre>sudo systemd-resolve --flush-caches<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h3><span class="ez-toc-section" id="Query_DNS_via_systemd-resolved"></span>Query DNS via systemd-resolved<span class="ez-toc-section-end"></span></h3>
+<pre>resolvectl query linuxblog.io<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>This queries through <code>systemd-resolved</code> specifically, which is useful for confirming what the stub resolver sees versus what a direct DNS query returns.</p>
+<h3><span class="ez-toc-section" id="Configure_Global_DNS_Servers_for_systemd-resolved"></span>Configure Global DNS Servers for systemd-resolved<span class="ez-toc-section-end"></span></h3>
+<p>Edit <code>/etc/systemd/resolved.conf</code>:</p>
+<pre>[Resolve]
+DNS=1.1.1.1 1.0.0.1
+FallbackDNS=8.8.8.8 8.8.4.4<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>I’ve left <code>DNSSEC</code> and <code>DNSOverTLS</code> out of that block on purpose. They’re separate decisions. The systemd package ships with <code>DNSSEC=no</code>, and the documentation recommends <code>DNSSEC=allow-downgrade</code> for general use, which validates when the upstream server supports it and quietly stops when it doesn’t. <code>DNSOverTLS</code> also defaults to <code>no</code>; set it to <code>opportunistic</code> if you want encryption where available. Turning either on blindly is a common cause of <code>SERVFAIL</code> against resolvers that don’t support them, so add them deliberately once you know your upstream is compatible. Then restart the service:</p>
+<pre>sudo systemctl restart systemd-resolved<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p><em>Note: <code>systemd-resolved</code> can use both per-link and global DNS servers, and routing domains decide which link a given query prefers. <code>FallbackDNS</code> is only used when no other DNS server information is available at all. So if your DHCP server pushes its own nameserver on an interface, that per-link server is normally what handles queries routed to that link, not the global <code>DNS=</code> setting.</em></p>
+<h2><span class="ez-toc-section" id="The_dig_Command_Your_Primary_DNS_Debugging_Tool"></span>The dig Command: Your Primary DNS Debugging Tool<span class="ez-toc-section-end"></span></h2>
+<p><img decoding="async" class="alignnone wp-image-22564 size-full" title="DNS resolution and troubleshooting on Linux" src="https://static.linuxblog.io/wp-content/uploads/2026/08/dns.jpg" alt="Linux terminal showing dig, resolvectl, and getent commands for DNS resolution" width="868" height="509" srcset="https://static.linuxblog.io/wp-content/uploads/2026/08/dns.jpg 868w, https://static.linuxblog.io/wp-content/uploads/2026/08/dns-300x176.jpg 300w, https://static.linuxblog.io/wp-content/uploads/2026/08/dns-560x328.jpg 560w" sizes="(max-width: 868px) 100vw, 868px"></p>
+<p><code>dig</code> is the tool you reach for first when DNS is misbehaving. It gives you precise, unambiguous output. Install it if it’s missing:</p>
+<pre># Debian/Ubuntu
+sudo apt install dnsutils
+
+# Fedora/RHEL
+sudo dnf install bind-utils<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h3><span class="ez-toc-section" id="Basic_Query"></span>Basic Query<span class="ez-toc-section-end"></span></h3>
+<pre>dig linuxblog.io<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>The output shows the question, the answer (A records), the server that responded, and the query time. The <code>ANSWER SECTION</code> is what you care about most.</p>
+<h3><span class="ez-toc-section" id="Query_a_Specific_DNS_Server"></span>Query a Specific DNS Server<span class="ez-toc-section-end"></span></h3>
+<pre>dig @8.8.8.8 linuxblog.io<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>This bypasses your local resolver entirely and queries Google’s DNS directly. Great for isolating whether the problem is your local config or upstream.</p>
+<h3><span class="ez-toc-section" id="Query_Specific_Record_Types"></span>Query Specific Record Types<span class="ez-toc-section-end"></span></h3>
+<pre># MX records (mail)
+dig linuxblog.io MX
+
+# AAAA records (IPv6)
+dig linuxblog.io AAAA
+
+# NS records (nameservers)
+dig linuxblog.io NS
+
+# TXT records (SPF, DKIM, etc.)
+dig linuxblog.io TXT
+
+# Reverse lookup (PTR)
+dig -x 104.21.1.1<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h3><span class="ez-toc-section" id="Short_Output"></span>Short Output<span class="ez-toc-section-end"></span></h3>
+<p>When you just want the answer:</p>
+<pre>dig +short linuxblog.io<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h3><span class="ez-toc-section" id="Trace_the_Full_Resolution_Path"></span>Trace the Full Resolution Path<span class="ez-toc-section-end"></span></h3>
+<pre>dig +trace linuxblog.io<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>This starts from the root nameservers and follows the delegation chain down to the authoritative answer. It runs its own resolution path and ignores your local resolver’s cache, so it’s the right tool for finding where an authoritative delegation is breaking, and for confirming what the live authoritative record actually is versus what your local resolver returns. It’s the wrong tool for hunting a locally cached stale record, precisely because it bypasses that cache.</p>
+<h3><span class="ez-toc-section" id="Check_DNSSEC"></span>Check DNSSEC<span class="ez-toc-section-end"></span></h3>
+<pre>dig +dnssec linuxblog.io<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>If the domain is DNSSEC-signed you’ll see <code>RRSIG</code> records in the answer. The <code>ad</code> flag in the header means the response was authenticated.</p>
+<h2><span class="ez-toc-section" id="getent_Test_the_Full_Resolution_Path"></span>getent: Test the Full Resolution Path<span class="ez-toc-section-end"></span></h2>
+<p><img decoding="async" class="alignnone wp-image-22569 size-large" title="dig vs getent: testing DNS versus the NSS resolution path" src="https://static.linuxblog.io/wp-content/uploads/2026/08/dns-dig-vs-getent-868x488.png" alt="Comparison showing dig queries DNS directly while getent walks the full NSS path" width="868" height="488" srcset="https://static.linuxblog.io/wp-content/uploads/2026/08/dns-dig-vs-getent-868x488.png 868w, https://static.linuxblog.io/wp-content/uploads/2026/08/dns-dig-vs-getent-300x169.png 300w, https://static.linuxblog.io/wp-content/uploads/2026/08/dns-dig-vs-getent-560x315.png 560w" sizes="(max-width: 868px) 100vw, 868px"></p>
+<p>Here’s a distinction that trips up a lot of people. <code>dig</code> queries DNS directly. It does not read <code>/etc/nsswitch.conf</code>, it does not check <code>/etc/hosts</code>, and it doesn’t care what your applications actually do. <code>getent hosts</code> goes through the system’s NSS path, the same one your applications use:</p>
+<pre>getent hosts linuxblog.io<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>This is why <code>dig linuxblog.io</code> can return a perfect answer while your application still fails to resolve the same name. If there’s a stale <code>/etc/hosts</code> entry, a broken <code>nsswitch.conf</code>, or an NSS module misbehaving, <code>dig</code> sails right past it and <code>getent</code> catches it. When DNS “works” but a program disagrees, this is the first command to run.</p>
+<h2><span class="ez-toc-section" id="Other_Useful_DNS_Tools"></span>Other Useful DNS Tools<span class="ez-toc-section-end"></span></h2>
+<h3><span class="ez-toc-section" id="nslookup"></span>nslookup<span class="ez-toc-section-end"></span></h3>
+<p><code>nslookup</code> is older and less precise than <code>dig</code>, but it’s available almost everywhere and fine for quick checks:</p>
+<pre>nslookup linuxblog.io
+nslookup linuxblog.io 8.8.8.8<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h3><span class="ez-toc-section" id="host"></span>host<span class="ez-toc-section-end"></span></h3>
+<p>Clean, minimal output. Good for scripting:</p>
+<pre>host linuxblog.io
+host -t MX linuxblog.io<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h3><span class="ez-toc-section" id="systemd-resolved_statistics"></span>systemd-resolved statistics<span class="ez-toc-section-end"></span></h3>
+<pre>resolvectl statistics<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>Shows resolver transaction and cache statistics. The exact fields vary by systemd version, but it’s useful for confirming whether the local resolver is actually being used and whether caching is happening. Consistently poor cache behavior or a climbing failure count is a clue that something’s wrong upstream or with your resolver config.</p>
+<h2><span class="ez-toc-section" id="Common_DNS_Problems_and_Fixes"></span>Common DNS Problems and Fixes<span class="ez-toc-section-end"></span></h2>
+<p><img loading="eager" decoding="async" class="alignnone wp-image-22570 size-large" title="Linux DNS troubleshooting decision flow" src="https://static.linuxblog.io/wp-content/uploads/2026/08/dns-troubleshooting-flow-868x550.png" alt="Top-down DNS troubleshooting flow: ping, dig at public resolver, dig local, getent" width="868" height="550" srcset="https://static.linuxblog.io/wp-content/uploads/2026/08/dns-troubleshooting-flow-868x550.png 868w, https://static.linuxblog.io/wp-content/uploads/2026/08/dns-troubleshooting-flow-300x190.png 300w, https://static.linuxblog.io/wp-content/uploads/2026/08/dns-troubleshooting-flow-560x355.png 560w" sizes="auto, (max-width: 868px) 100vw, 868px"></p>
+<h3><span class="ez-toc-section" id="%E2%80%9CTemporary_failure_in_name_resolution%E2%80%9D"></span>“Temporary failure in name resolution”<span class="ez-toc-section-end"></span></h3>
+<p>A bad or empty <code>/etc/resolv.conf</code> is the most common cause, but not the only one. It can also come from no network route, a firewall blocking port 53, <code>systemd-resolved</code> being down, VPN DNS routing, an unreachable upstream resolver, or an NSS misconfiguration. Start with <code>resolv.conf</code> anyway, since it’s quick to check:</p>
+<pre>cat /etc/resolv.conf
+ls -la /etc/resolv.conf<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>Check the symlink before you touch anything. If <code>/etc/resolv.conf</code> is a symlink to a <code>systemd-resolved</code> or NetworkManager stub, overwriting it directly fixes nothing and creates a second problem. On those systems, fix DNS through the manager (covered below), not by editing the file. Only on a system where <code>resolv.conf</code> is a real, unmanaged file should you drop in a temporary nameserver to get back online:</p>
+<pre>echo "nameserver 1.1.1.1" | sudo tee /etc/resolv.conf<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>On a server running <code>systemd-resolved</code>, also confirm the service is actually running and that the symlink points where it should.</p>
+<h3><span class="ez-toc-section" id="DNS_Works_for_Some_Sites_but_Not_Others"></span>DNS Works for Some Sites but Not Others<span class="ez-toc-section-end"></span></h3>
+<p>Try querying directly against a public resolver:</p>
+<pre>dig @1.1.1.1 failing-site.com<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>If that works but your local resolver doesn’t return an answer, the issue is your local DNS config or a bad cache entry. Flush caches and check your <code>resolv.conf</code> search domains. An overly broad <code>search</code> directive can cause the resolver to mangle hostnames before querying them.</p>
+<h3><span class="ez-toc-section" id="Slow_DNS_Resolution"></span>Slow DNS Resolution<span class="ez-toc-section-end"></span></h3>
+<p>Run a few timed queries:</p>
+<pre>dig linuxblog.io | grep "Query time"<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>A first, uncached query often lands somewhere around 50-200ms because the nameserver has to do a full lookup, and a second identical query typically comes back in a few milliseconds if caching is working. Those aren’t hard thresholds: a distant resolver or a fully recursive lookup can legitimately take longer. What you’re looking for is the pattern. A cached query should be much faster than an uncached one, and if every query takes hundreds of milliseconds regardless, your nameserver is slow or unreachable and the resolver is timing out before falling back. Try switching to a faster resolver like Cloudflare (<code>1.1.1.1</code>) or Google (<code>8.8.8.8</code>). Also see <a href="https://linuxblog.io/linux-server-idle-but-slow/" target="_blank" rel="noopener">why your Linux server might look idle but feel slow</a>, because repeated DNS timeouts can make everything feel sluggish even when CPU and memory look fine.</p>
+<h3><span class="ez-toc-section" id="split-DNS_and_VPN_Issues"></span>split-DNS and VPN Issues<span class="ez-toc-section-end"></span></h3>
+<p>When you’re connected to a VPN, you often need different DNS servers for internal names versus public ones. <code>systemd-resolved</code> handles this well with per-link DNS configuration. NetworkManager and WireGuard both integrate with it. The key setting is the DNS domain on each link: if a link has <code>~.</code> as its DNS domain, it becomes the default route for all DNS. If it has <code>~internal.company.com</code>, only queries for that domain go to that link’s nameserver.</p>
+<p>Check what each link is doing:</p>
+<pre>resolvectl status<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>If internal names resolve but public ones don’t (or vice versa), the DNS domain assignments on your VPN interface are almost certainly misconfigured.</p>
+<h2><span class="ez-toc-section" id="Setting_Static_DNS_Without_Getting_Overwritten"></span>Setting Static DNS Without Getting Overwritten<span class="ez-toc-section-end"></span></h2>
+<p>The most common frustration: you edit <code>/etc/resolv.conf</code>, it gets overwritten on the next DHCP renewal or reboot. Here’s how to handle it properly on common setups.</p>
+<h3><span class="ez-toc-section" id="NetworkManager"></span>NetworkManager<span class="ez-toc-section-end"></span></h3>
+<p>Don’t edit <code>resolv.conf</code> directly. Instead, set DNS in the connection profile:</p>
+<pre>nmcli con mod "Wired connection 1" ipv4.dns "1.1.1.1 8.8.8.8"
+nmcli con mod "Wired connection 1" ipv4.ignore-auto-dns yes
+nmcli con up "Wired connection 1"<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>The <code>ignore-auto-dns yes</code> line stops DHCP from overriding your choice. Verify with:</p>
+<pre>nmcli con show "Wired connection 1" | grep dns<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<h3><span class="ez-toc-section" id="systemd-resolved_global_fallback"></span>systemd-resolved (global fallback)<span class="ez-toc-section-end"></span></h3>
+<p>Set <code>DNS=</code> in <code>/etc/systemd/resolved.conf</code> and <code>FallbackDNS=</code> for redundancy. These apply when no interface-specific DNS is set.</p>
+<h3><span class="ez-toc-section" id="Static_etcresolvconf_on_a_server"></span>Static /etc/resolv.conf on a server<span class="ez-toc-section-end"></span></h3>
+<p>If you’re on a server that genuinely has no NetworkManager or <code>systemd-resolved</code> managing the file, and you intentionally want a static config, you can make the file immutable so nothing overwrites it:</p>
+<pre>sudo chattr +i /etc/resolv.conf<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>Remove the immutable flag when you need to update it:</p>
+<pre>sudo chattr -i /etc/resolv.conf<button class="copy-btn" title="Copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e8e8e8"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"></path></svg></button></pre>
+<p>Treat this as a last resort, not the normal way to manage DNS. It’s reliable on minimal servers where you control exactly what runs, but the immutable flag can also cause confusing failures later: package upgrades that touch <code>resolv.conf</code> (a <code>systemd</code> or <code>network-manager</code> update, for instance) can error out, and anyone troubleshooting will wonder why the file refuses to change. It’s also worth automating a check that <code>resolv.conf</code> contains your intended nameservers as part of your maintenance routines. For ideas on that, see <a href="https://linuxblog.io/automate-linux-server-maintenance/" target="_blank" rel="noopener">Linux Server Setup – Part 3: Automate Maintenance Tasks</a>.</p>
+<h2><span class="ez-toc-section" id="Choosing_DNS_Resolvers"></span>Choosing DNS Resolvers<span class="ez-toc-section-end"></span></h2>
+<p>The nameserver you point at matters for both performance and privacy. A few solid options:</p>
+<ul>
+<li><strong>Cloudflare (1.1.1.1 / 1.0.0.1):</strong> Fast public resolver with a large global network and privacy-focused policies. Supports <a href="https://developers.cloudflare.com/1.1.1.1/" target="_blank" rel="noopener">DNS-over-HTTPS and DNS-over-TLS</a>.</li>
+<li><strong>Google (8.8.8.8 / 8.8.4.4):</strong> Reliable and well-known, with a large anycast network. Check its published privacy policy if data handling matters for your use case.</li>
+<li><strong>Quad9 (9.9.9.9):</strong> Blocks known malicious domains. Good for servers where you want an extra layer of protection without a full firewall rule.</li>
+<li><strong>Your router or local resolver:</strong> Usually fine for home setups. Can be a problem on servers if the router is rebooted or the DHCP lease changes its IP.</li>
+</ul>
+<p>For public-facing servers that don’t need internal DNS, I avoid pointing at the router. If the router has a problem, DNS fails, and suddenly nothing on the server can resolve hostnames including package managers, monitoring agents, and backup scripts. Pointing directly at <code>1.1.1.1</code> and <code>8.8.8.8</code> removes that dependency. In environments with internal DNS zones, split DNS, service discovery, or a hosting provider’s own resolver, that local or provider resolver may be essential, so this isn’t a blanket rule. On the other hand, if you rely on local DNS for internal hostnames, don’t just stack the internal and public resolvers in the same <code>resolv.conf</code> and expect fallback to sort it out. The glibc resolver accepts the first answer it gets, including an <code>NXDOMAIN</code> from a public resolver that has never heard of your internal zone. It only moves to the next <code>nameserver</code> on a timeout, not on a negative answer. For split-DNS, use per-link routing with <code>systemd-resolved</code> (the same routing domains covered earlier) or a local forwarding resolver like <code>dnsmasq</code> that sends internal queries to the internal server and everything else upstream. See <a href="https://linuxblog.io/linux-commands-frequently-used-by-linux-sysadmins-part-1/" target="_blank" rel="noopener">Linux Commands frequently used by Linux Sysadmins</a> for the full set of tools that complement this kind of server troubleshooting.</p>
+<h2><span class="ez-toc-section" id="A_Quick_Troubleshooting_Checklist"></span>A Quick Troubleshooting Checklist<span class="ez-toc-section-end"></span></h2>
+<ol>
+<li style="list-style-type: none;">
+<ol>
+<li>Check <code>/etc/resolv.conf</code>: Is there a valid <code>nameserver</code> line?</li>
+<li>Check <code>/etc/nsswitch.conf</code>: Is <code>dns</code> present in the <code>hosts</code> line?</li>
+<li>Run <code>dig @1.1.1.1 google.com</code>: Does a direct query to a public resolver work?</li>
+<li>Run <code>dig google.com</code>: Does the local resolver work?</li>
+<li>Check <code>systemctl status systemd-resolved</code> if applicable.</li>
+<li>Run <code>resolvectl status</code> to see per-interface DNS assignments.</li>
+<li>Flush caches with <code>resolvectl flush-caches</code> if you suspect a stale record.</li>
+<li>Run <code>getent hosts google.com</code>: If <code>dig</code> works but this doesn’t, the problem is in the NSS path, not DNS itself.</li>
+<li>Use <code>dig +trace</code> to follow the full resolution path for stubborn failures.</li>
+</ol>
+</li>
+</ol>
+<p>Most DNS problems on Linux fall into one of three categories: wrong or empty <code>resolv.conf</code>, a misconfigured or unreachable nameserver, or a stale cached record. The tools above cover all three. Getting comfortable with <code>dig</code> in particular will save you a lot of time. It gives you exact, repeatable results and it’s the same tool your DNS servers use to talk to each other.</p>
+<p><em>Also see: <a href="https://linuxblog.io/netstat-command-in-linux-with-examples/" target="_blank" rel="noopener">netstat command in Linux with examples</a> and <a href="https://linuxblog.io/ping-command-in-linux-with-examples/" target="_blank" rel="noopener">ping command in Linux with examples</a> for complementary <a href="https://linuxblog.io/guide-to-network-troubleshooting-in-linux/" target="_blank" rel="noopener">network troubleshooting</a> tools.</em></p><div class="hayden-744f8b86efd2dbf3633cf065825401e1 hayden-end-of-article-2" id="hayden-744f8b86efd2dbf3633cf065825401e1"></div><div class="hayden-fed501d04c4770c73e0007ccfa9939f2 hayden-end-of-article" id="hayden-fed501d04c4770c73e0007ccfa9939f2"><div class="hayden-end-of-article hayden-entity-placement" id="hayden-1561161484"><div data-nosnippet="" id="hayden-2312638566" style="margin-left: auto;margin-right: auto;text-align: center;" data-hayden-trackid="21621" data-hayden-trackbid="1" class="hayden-target hayden-target"><a href="https://www.manageengine.com/it-operations-management/infrastructure-observability/server-observability.html?utm_source=linuxblog&amp;utm_medium=bannerad&amp;utm_campaign=ServerObservability" data-bid="1" data-no-instant="1" rel="noopener nofollow sponsored">
+  <img src="https://static.linuxblog.io/wp-content/uploads/2026/06/868×300V3_x1.png" srcset="https://static.linuxblog.io/wp-content/uploads/2026/06/868×300V3_x1.png 1x,
+               https://static.linuxblog.io/wp-content/uploads/2026/06/868×300V3.png 2x" alt="ManageEngine Site24x7 - Fix Linux issues in minutes, not hours!" width="868" height="300" loading="eager" style="display:block;">
+</a></div><div align="center" style="font-style: italic; font-size: 0.85em; font-weight: normal; margin-top: 4px;">
+	Advertisement
+</div></div></div>
+<h3 class="tag-line" style="padding-top: 10px; padding-bottom: 8px;">Tags: <a href="https://linuxblog.io/tag/hosting/" rel="tag">hosting</a>, <a href="https://linuxblog.io/tag/security/" rel="tag">security</a>, <a href="https://linuxblog.io/tag/server/" rel="tag">server</a>, <a href="https://linuxblog.io/tag/sysadmins/" rel="tag">sysadmins</a></h3>
+        <div class="custom-post-footer" style="margin-top: 0px; padding-top: 8px; padding-bottom: 1px; padding-left: 10px; padding-right: 10px; background-color: #dae8fc;">
+            <p class="share-message"><i>Thanks for reading! Stay updated by <a href="https://landing.mailerlite.com/webforms/landing/t2y6q4" class="additional-link" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;color:#0055cc">subscribing to our newsletter</a>, and consider <a href="https://shop.linuxcommunity.io" class="additional-link" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;color:#0055cc">grabbing a t-shirt or membership</a> to support the community. Lastly, I would like to <a href="https://linuxcommunity.io/invites/xrFmjFBFeT" class="additional-link" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;color:#0055cc">personally invite you</a> to connect with other Linux enthusiasts in our <a href="https://linuxcommunity.io/invites/xrFmjFBFeT" class="additional-link" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;color:#0055cc">community forums</a>.
+            </i></p>
+        </div>
+        					
+											</section>			
+       	                     
+        	    </article><!-- .post -->
+        	    
+        	   	    	   
+	    	   	    	    	
+	    	    	    	    	
+	    	    	
+			    	    	 
+	<div id="comments" class="comments-area discourse-comments-area">
+		<div class="respond comment-respond">
+			<div id="reply-title" class="comment-reply-title"><strong><a href="https://linuxcommunity.io/t/linux-nameservers-and-dns-resolution/10959" style="font-size: 1.3em">Be the first to comment</a></strong></div>
+		</div>
+	</div>
+
+  				
+        	  
+				<div class="svc-banner" style="margin-top: 2em;" data-nosnippet="">
+<img class="svc-logo" src="https://static.linuxblog.io/wp-content/themes/theonepager/images/stacklinux-logo.png" alt="StackLinux" width="200" height="47" loading="eager" decoding="async">
+<div class="svc-variant" data-v="1">
+<h2 style="color:#fff; margin: 0 0 0.3em;">Stop losing users to <span class="svc-accent">slow load times.</span></h2>
+<p class="svc-sub">Blazing-fast, custom-configured NVMe Linux hosting.</p>
+<p>Don't guess if your server is fast enough. Know it. Get a free performance audit of your current setup.</p>
+<p class="svc-hosted">This blog is hosted by <a href="https://stacklinux.com/?utm_source=linuxblog.io&amp;utm_medium=post-cta&amp;utm_content=disclosure" target="_blank" rel="noopener">StackLinux</a>, our parent company. <a class="sl-uptime" href="https://status.stacklinux.com/" target="_blank" rel="noopener"><b>99.99%</b> uptime</a>.</p>
+<a class="svc-cta" href="https://stacklinux.com/start/?utm_source=linuxblog.io&amp;utm_medium=post-cta&amp;utm_content=speed-audit" target="_blank" rel="noopener">Start Your Free Server Audit</a>
+</div>
+<div class="svc-variant on" data-v="2">
+<h2 style="color:#fff; margin: 0 0 0.3em;">You write the code. <span class="svc-accent">We'll manage the server.</span></h2>
+<p class="svc-sub">Fully managed Linux hosting built for absolute speed.</p>
+<p>Ditch the server maintenance headaches. Our experts custom-configure high-performance NVMe Linux servers specifically for your needs. Try us out. Your first month is entirely on us.</p>
+<p class="svc-hosted">This blog is hosted by <a href="https://stacklinux.com/?utm_source=linuxblog.io&amp;utm_medium=post-cta&amp;utm_content=disclosure" target="_blank" rel="noopener">StackLinux</a>, our parent company. <a class="sl-uptime" href="https://status.stacklinux.com/" target="_blank" rel="noopener"><b>99.99%</b> uptime</a>.</p>
+<a class="svc-cta" href="https://stacklinux.com/start/?utm_source=linuxblog.io&amp;utm_medium=post-cta&amp;utm_content=managed-30" target="_blank" rel="noopener">Claim Your 30 Free Days</a>
+</div>
+<div class="svc-variant" data-v="3">
+<h2 style="color:#fff; margin: 0 0 0.3em;">30 days of NVMe Linux hosting. <span class="svc-accent">$0 down.</span></h2>
+<p class="svc-sub">Risk-free migration and a money-back guarantee.</p>
+<p>We are so confident in our high-performance NVMe infrastructure that we'll audit your current server for free, migrate you without downtime, and give you 30 days to see the speed difference yourself.</p>
+<p class="svc-hosted">This blog is hosted by <a href="https://stacklinux.com/?utm_source=linuxblog.io&amp;utm_medium=post-cta&amp;utm_content=disclosure" target="_blank" rel="noopener">StackLinux</a>, our parent company. <a class="sl-uptime" href="https://status.stacklinux.com/" target="_blank" rel="noopener"><b>99.99%</b> uptime</a>.</p>
+<a class="svc-cta" href="https://stacklinux.com/start/?utm_source=linuxblog.io&amp;utm_medium=post-cta&amp;utm_content=offer-30" target="_blank" rel="noopener">Deploy Free for 30 Days</a>
+</div>
+
+</div>
+
+
+				<nav id="post-entries" class="fix">
+	    	    <div class="nav-prev fl"><a href="https://linuxblog.io/linux-ssh-keygen-set-up-ssh-key-authentication-the-right-way/" rel="prev"><span class="meta-nav">⇠</span> Linux ssh-keygen: Set Up SSH Key Authentication the Right Way<br><small style="color: #666; font-weight: normal;"><i>Previous article</i></small></a></div>
+	    	    <div class="nav-next fr" style="text-align:right"></div>
+	    	    </nav><!-- #post-entries -->
+					    	    
+					
+			</section><!-- #main -->
+
+						
+        		
+<aside id="sidebar" class="col-right">
+
+ 		    <div class="primary"><div id="advads_ad_widget-2" class="widget hayden-widget"><h3>Sponsored by</h3><div style="min-height:85px;" class="hayden-dce3397077bf964f9c9ceccd9b1b1c2d hayden-sponsored-by" id="hayden-dce3397077bf964f9c9ceccd9b1b1c2d"><div class="hayden-sponsored-by hayden-entity-placement" id="hayden-254006691"><div data-nosnippet="" id="hayden-2807268635" data-hayden-trackid="21623" data-hayden-trackbid="1" class="hayden-target hayden-target"><a data-no-instant="1" href="https://www.manageengine.com/it-operations-management/infrastructure-observability/server-observability.html?utm_source=linuxblog&amp;utm_medium=bannerad&amp;utm_campaign=ServerObservability" rel="noopener nofollow sponsored" class="a2t-link" target="_blank" aria-label="OpManager Nexus_with ME_Black_sponsor"><img loading="eager" decoding="async" src="https://linuxblog.io/wp-content/uploads/2025/12/OpManager-Nexus_with-ME_Black_sponsor.png" alt="" width="336" height="74"></a></div></div></div></div><div id="tag_cloud-2" class="widget widget_tag_cloud"><h3>Popular Topics</h3><div class="tagcloud"><a href="https://linuxblog.io/tag/sysadmins/" class="tag-cloud-link tag-link-49 tag-link-position-1" style="font-size: 12pt;">sysadmins</a>, <a href="https://linuxblog.io/tag/server/" class="tag-cloud-link tag-link-46 tag-link-position-2" style="font-size: 12pt;">server</a>, <a href="https://linuxblog.io/tag/performance/" class="tag-cloud-link tag-link-45 tag-link-position-3" style="font-size: 12pt;">performance</a>, <a href="https://linuxblog.io/tag/commands/" class="tag-cloud-link tag-link-117 tag-link-position-4" style="font-size: 12pt;">commands</a>, <a href="https://linuxblog.io/tag/security/" class="tag-cloud-link tag-link-35 tag-link-position-5" style="font-size: 12pt;">security</a>, <a href="https://linuxblog.io/tag/desktop/" class="tag-cloud-link tag-link-110 tag-link-position-6" style="font-size: 12pt;">desktop</a>, <a href="https://linuxblog.io/tag/hosting/" class="tag-cloud-link tag-link-56 tag-link-position-7" style="font-size: 12pt;">hosting</a>, <a href="https://linuxblog.io/tag/distro/" class="tag-cloud-link tag-link-95 tag-link-position-8" style="font-size: 12pt;">distro</a>, <a href="https://linuxblog.io/tag/homelab/" class="tag-cloud-link tag-link-113 tag-link-position-9" style="font-size: 12pt;">homelab</a>, <a href="https://linuxblog.io/tag/apm/" class="tag-cloud-link tag-link-73 tag-link-position-10" style="font-size: 12pt;">apm</a></div>
+</div><div id="text-4" class="widget widget_text"><h3>Popular Articles</h3>			<div class="textwidget"><p><a title="90 Linux Commands frequently used by Linux Sysadmins" href="https://linuxblog.io/90-linux-commands-frequently-used-by-linux-sysadmins/" rel="bookmark">90 Linux Commands Frequently Used by Sysadmins</a></p>
+<p><a href="https://linuxblog.io/linux-networking-commands-scripts/">60 Linux Networking Commands and scripts</a></p>
+<p><a href="https://linuxblog.io/20-top-server-monitoring-application-performance-monitoring-apm-solutions/">100 Top Observability Tools (APM Solutions)</a></p>
+<p><a title="PHP memory_limit – understanding and increasing this setting" href="https://linuxblog.io/understanding-php-memory_limit/">PHP memory_limit – understanding and increasing</a></p>
+<p><a title="Choosing the Best Linux Distro for Desktop" href="https://linuxblog.io/best-linux-distro/">Best Linux Distros for Desktop</a></p>
+<p><a title="Home Lab Beginners guide – Hardware" href="https://linuxblog.io/home-lab-beginners-guide-hardware/">Home Lab Beginners guide – Hardware</a></p>
+<p><a href="https://linuxblog.io/what-is-iowait-and-linux-performance/">What is Linux iowait? (Explained With Examples)</a></p>
+<p><a href="https://linuxblog.io/mysql-server-has-gone-away-error-solutions/">“MySQL server has gone away” – Solutions</a></p>
+<p><a href="https://linuxblog.io/linux-performance-almost-always-add-swap-space/">Linux Performance: Almost Always Add Swap Space</a></p>
+<p><a title="Linux – How to Securely Copy Files Using SCP examples" href="https://linuxblog.io/linux-securely-copy-files-using-scp/">SCP Linux – Securely Copy Files Using SCP examples</a></p>
+<p><a class="browse-link" href="https://linuxblog.io/browse-articles/">Browse all articles ➜</a></p>
+</div>
+		</div>
+		<div id="recent-posts-5" class="widget widget_recent_entries">
+		<h3>Recent Articles</h3>
+		<ul>
+											<li>
+					<a href="https://linuxblog.io/linux-nameservers-dns-resolution/" aria-current="page">Linux nameservers and DNS Resolution</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/linux-ssh-keygen-set-up-ssh-key-authentication-the-right-way/">Linux ssh-keygen: Set Up SSH Key Authentication the Right Way</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/netcat-nc-command-linux-examples/">netcat (nc) Command in Linux, with Examples</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/diagnosing-swap-usage-smem-linux/">Diagnosing Swap Usage with smem on Linux</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/ln-command-in-linux-hard-links-vs-symlinks/">ln Command in Linux: Hard Links vs. Symlinks</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/linux-server-health-checks-10-metrics-every-sysadmin-should-monitor/">Linux Server Health Checks: 10 Metrics Every Sysadmin Should Monitor</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/mastering-linux-administration-20-powerful-commands-to-know/">Mastering Linux Administration: 20 Powerful Commands to Know</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/best-managed-switch-home-lab/">How I Chose the Best Managed Network Switch for My Home Lab</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/docker-alternative-podman-on-linux/">Docker Alternative: Podman on Linux</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/network-rack-for-small-office/">Network Rack for Small Office (Build Guide)</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/watch-command-linux-real-time-monitoring/">watch Command in Linux: Real-Time Monitoring with Examples</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/linux-troubleshooting-4-steps/">Linux Troubleshooting: These 4 Steps Will Fix 99% of Errors</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/nginx-tuning-tips-tls-ssl-https-ttfb-latency/">Nginx tuning tips: HTTPS/TLS – Turbocharge TTFB/Latency</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/linux-tmpfs/">Linux tmpfs for Speed and Temporary Storage</a>
+									</li>
+											<li>
+					<a href="https://linuxblog.io/teco-neovim-text-editing-unix-linux/">From TECO to Neovim: 50 Years of Text Editing on Unix and Linux</a>
+									</li>
+					</ul>
+
+		</div><div id="text-5" class="widget widget_text">			<div class="textwidget"><div style="margin-top: -20px;"><a class="browse-link" href="https://linuxblog.io/browse-articles/">Browse all articles ➜</a></div>
+</div>
+		</div><div class="widget hayden-widget"><div class="hayden-3f937b457a277c28513a0060cacd97eb hayden-widget" id="hayden-3f937b457a277c28513a0060cacd97eb"><div class="hayden-widget hayden-entity-placement" id="hayden-3500129123"><div data-nosnippet="" id="hayden-3043485433" data-hayden-trackid="21618" data-hayden-trackbid="1" class="hayden-target hayden-target"><a href="https://www.manageengine.com/it-operations-management/infrastructure-observability/server-observability.html?utm_source=linuxblog&amp;utm_medium=bannerad&amp;utm_campaign=ServerObservability" data-bid="1" data-no-instant="1" rel="noopener nofollow sponsored">
+  <img src="https://static.linuxblog.io/wp-content/uploads/2026/06/image_6-x1.png" srcset="https://static.linuxblog.io/wp-content/uploads/2026/06/image_6-x1.png 1x,
+               https://static.linuxblog.io/wp-content/uploads/2026/06/image-6.png 2x" alt="ManageEngine Site24x7 - Fix Linux issues in minutes, not hours!" width="385" height="350" loading="eager" style="display:block;">
+</a></div><div data-nosnippet="" align="center" style="font-style: italic; font-weight: normal;">
+	Advertisement
+</div></div></div></div>		           
+	</div>        
+	   
+	
+	 
+
+	
+</aside><!-- /#sidebar -->
+	
+		</div><!-- /.col-full -->
+		
+    </div><!-- #content -->
+
+    	</main>
+
+	<footer id="footer">
+	
+		<div class="col-full">
+
+			<div id="copyright" class="footer-section">
+							<div class="footer-cols">
+					<div class="footer-left">
+						<p>© 2012 - 2026 Linuxblog.io.</p>
+						<p><i>Formerly known as haydenjames.io.</i></p>
+						<p class="footer-trademark">Linux® is a registered trademark of Linus Torvalds. Linuxblog.io is not affiliated with or endorsed by Linus Torvalds or the Linux Foundation.</p>
+					</div>
+					<div class="footer-right">
+						<p><u><a href="/about-me/">About</a></u> · <span class="mobile-only"><u><a href="/sponsors/">Sponsors</a></u> · </span><u><a href="/newsletter/">Newsletter</a></u> · <u><a href="/connect/">Contact</a></u></p>
+						<p><u><a href="/privacy-policy/">Privacy Policy</a></u> · <u><a href="/terms-conditions-use/">Terms and Conditions</a></u></p>
+					</div>
+				</div>
+						</div>
+			
+			
+			<div id="credit" class="footer-section">
+        				</div>
+			
+		</div><!-- /.col-full -->
+
+	</footer><!-- /#footer  -->
+
+</div><!-- /#wrapper -->
+
+<a href="#header" class="back-to-top" id="backToTopBtn" style="display: none;"><b>Top ↑</b></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>/* LinuxCommunity.io sticky bottom-sheet signup */
+#lcio-sheet {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 999990;
+	background: #000;
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 34px;
+	padding: 30px 44px 26px 32px;
+	border-radius: 0;
+	box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.45);
+	transform: translateY(110%);
+	visibility: hidden;
+	transition: transform 0.35s ease, visibility 0.35s;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	box-sizing: border-box;
+}
+#lcio-sheet.lcio-sheet-visible {
+	transform: translateY(0);
+	visibility: visible;
+}
+#lcio-sheet::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: linear-gradient(90deg, rgba(76, 175, 80, 0) 0%, #4caf50 30%, #4caf50 70%, rgba(76, 175, 80, 0) 100%);
+	z-index: 3;
+}
+#lcio-sheet-close {
+	position: absolute;
+	top: 8px;
+	right: 14px;
+	background: transparent;
+	border: 0;
+	color: #fff;
+	font-size: 34px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 4px 8px;
+	z-index: 2;
+	opacity: 0.85;
+}
+#lcio-sheet-close:hover,
+#lcio-sheet-close:focus {
+	opacity: 1;
+	outline: none;
+}
+#lcio-sheet picture {
+	display: contents;
+}
+#lcio-sheet-hero {
+	width: 460px;
+	height: auto;
+	border-radius: 8px;
+	flex: 0 0 auto;
+}
+#lcio-sheet-body {
+	flex: 0 1 680px;
+	min-width: 0;
+}
+#lcio-sheet-title {
+	font-size: 31px;
+	font-weight: 800;
+	line-height: 1.2;
+	margin: 0 0 8px;
+}
+#lcio-sheet-sub {
+	font-size: 18px;
+	color: #ccc;
+	margin: 0 0 5px;
+}
+#lcio-sheet-sub .lcio-plus {
+	color: #4caf50;
+	font-weight: 700;
+}
+#lcio-sheet-count {
+	font-size: 17px;
+	color: #9d9d9d;
+	margin: 0 0 18px;
+}
+#lcio-sheet-form {
+	display: flex;
+	gap: 12px;
+	margin: 0 0 12px;
+}
+#lcio-sheet-email {
+	flex: 1 1 55%;
+	min-width: 0;
+	padding: 20px 18px;
+	border: 1px solid #555;
+	border-radius: 4px;
+	background: #fff;
+	color: #111;
+	font-size: 19px;
+}
+#lcio-sheet-email:focus {
+	outline: none;
+	border-color: #4caf50;
+}
+#lcio-sheet-email[aria-invalid="true"] {
+	border-color: #e53935;
+}
+#lcio-sheet-cta {
+	flex: 0 0 auto;
+	background: #4caf50;
+	color: #000;
+	border: 0;
+	border-radius: 4px;
+	padding: 20px 32px;
+	font-size: 24px;
+	font-weight: 800;
+	line-height: 1.1;
+	cursor: pointer;
+}
+#lcio-sheet-cta:hover,
+#lcio-sheet-cta:focus {
+	background: #43a047;
+	outline: none;
+}
+#lcio-sheet-consent {
+	font-size: 12px;
+	color: #8b8b8b;
+	line-height: 1.4;
+	margin: 0;
+}
+.lcio-sheet-mobile {
+	display: none;
+}
+/* Mid-size screens: scale the row down so the email field keeps typing room */
+@media (min-width: 861px) and (max-width: 1350px) {
+	#lcio-sheet {
+		gap: 24px;
+		padding: 24px 44px 20px 24px;
+	}
+	#lcio-sheet-hero {
+		width: 320px;
+	}
+	#lcio-sheet-title {
+		font-size: 26px;
+	}
+	#lcio-sheet-sub {
+		font-size: 16px;
+	}
+	#lcio-sheet-count {
+		font-size: 15px;
+		margin: 0 0 14px;
+	}
+	#lcio-sheet-email {
+		padding: 15px 14px;
+		font-size: 17px;
+	}
+	#lcio-sheet-cta {
+		padding: 15px 20px;
+		font-size: 19px;
+	}
+}
+@media (max-width: 860px) {
+	#lcio-sheet {
+		flex-direction: column;
+		gap: 10px;
+		padding: 0 16px 12px;
+		text-align: left;
+		max-height: 88vh;
+		overflow-y: auto;
+	}
+	#lcio-sheet-hero {
+		width: calc(100% + 32px);
+		max-width: none;
+		margin: 0 -16px;
+		height: 190px;
+		object-fit: cover;
+		object-position: center top;
+		border-radius: 0;
+	}
+	#lcio-sheet-body {
+		flex: 0 1 auto;
+		width: 100%;
+		max-width: none;
+	}
+	#lcio-sheet-title {
+		font-size: 22px;
+		margin: 0 0 5px;
+	}
+	#lcio-sheet-sub {
+		font-size: 16px;
+		margin: 0 0 3px;
+	}
+	#lcio-sheet-count {
+		font-size: 13px;
+		margin: 0 0 10px;
+	}
+	#lcio-sheet-form {
+		gap: 8px;
+		margin: 0 0 8px;
+	}
+	#lcio-sheet-email {
+		padding: 12px 12px;
+		font-size: 16px;
+	}
+	#lcio-sheet-cta {
+		padding: 12px 16px;
+		font-size: 16px;
+	}
+	#lcio-sheet-consent {
+		font-size: 11px;
+	}
+	#lcio-sheet-close {
+		top: 8px;
+		right: 8px;
+		font-size: 28px;
+		width: 42px;
+		height: 42px;
+		padding: 0;
+		background: rgba(0, 0, 0, 0.65);
+		border-radius: 6px;
+		opacity: 1;
+	}
+	.lcio-sheet-desktop {
+		display: none;
+	}
+	.lcio-sheet-mobile {
+		display: inline;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	#lcio-sheet {
+		transition: none;
+	}
+}
+</style>
+
+
+	
+<!-- Google Analytics (minimal-analytics/ga4 - self-hosted, 2.8KB gzipped vs 140KB gtag.js) -->
+
+
+
+
+<!-- LinuxCommunity.io signup popup (active when LCIO_USE_INLINE_SIGNUP is false; defined in inline-signup.php). -->
+
+
+<style>
+  .ir-demo-disclaimer { position:fixed; bottom:0; left:0; right:0; z-index:2147483647;
+    background:#ffd60a; border-top:3px solid #b8960c; color:#1a1400;
+    font:800 13.5px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    text-align:center; padding:11px 18px; letter-spacing:.015em;
+    box-shadow:0 -2px 12px rgba(0,0,0,.18); }
+  .ir-demo-ribbon { position:fixed; top:50%; right:0; z-index:2147483647;
+    transform:translateY(-50%) rotate(180deg); writing-mode:vertical-rl;
+    background:#ffd60a; border:3px solid #b8960c; border-right:none; color:#1a1400;
+    font:800 12.5px/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    letter-spacing:.06em; padding:16px 9px; border-radius:0 8px 8px 0;
+    box-shadow:2px 0 12px rgba(0,0,0,.18); white-space:nowrap; }
+</style>
+<div class="ir-demo-disclaimer">⚠ DEMO ONLY — This page is a design mock-up created
+solely for demo purposes. Not affiliated with, endorsed by, or connected to any real
+service, publication, or person.</div>
+<div class="ir-demo-ribbon">⚠ DEMO — NOT A REAL PUBLICATION</div>
+<script>
+document.addEventListener('click', function (e) {
+  var a = e.target.closest ? e.target.closest('a') : null;
+  if (a && !a.closest('#instaread-demo-player-wrap')) e.preventDefault();
+}, true);
+</script></body><style data-ir-clean="1">
+#onetrust-consent-sdk, #onetrust-banner-sdk, .onetrust-pc-dark-filter,
+.qc-cmp2-container, #qc-cmp2-container, [id^="sp_message_container"],
+.fc-consent-root, #usercentrics-root, #didomi-host, #cmpbox, #cmpbox2,
+#CybotCookiebotDialog, .truste_overlay, .truste_box_overlay, #cookie-notice,
+.cky-consent-container, #cookiescript_injected, .osano-cm-window,
+.pum, .pum-overlay, [class*="popmake"], .mfp-bg, .mfp-wrap, .modal-backdrop,
+.fancybox-overlay, [id^="om-"], .sgpb-popup-overlay, .elementor-popup-modal,
+.tve_p_lb_overlay, .mc-modal, .mc-modal-bg
+{ display: none !important; }
+</style></html>
